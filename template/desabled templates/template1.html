@@ -1,0 +1,179 @@
+<html lang="en">
+    <head>
+    <!-- If you delete this tag, the sky will fall on your head -->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <title>Email Sample</title>
+
+ <style>
+     .form {
+  background:rgb(243,243,243);
+  padding: 40px;
+  max-width:600px;
+  margin:0px auto;
+}
+.emailTemplate h1{
+    margin: 20px 0px;
+}
+.emailTemplate .form-small {
+  background:white;
+  padding: 40px;
+  max-width:600px;
+  margin:10px auto;
+}
+
+.emailTemplate .h1-font {
+    font-family: Lobster;
+    text-align: center;
+}
+
+.emailTemplate .contact-font {
+	font-family: Indie Flower;
+	font-style: italic;
+	text-align: center;
+	color: rgb(111,111,111);
+}
+
+.emailTemplate .p-font {
+    margin: 20px 10px 20px;
+    font-size: 20px;  
+    font-family: 'Times New Roman', Times, serif;
+    text-align: center;
+}
+
+.emailTemplate .p-footer {
+	margin: 10px 10px 10px;
+	padding: 10px 50px 0px;
+    font-size: 11px;  
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+}
+
+/* .mail-image {
+	padding: 0px;
+	max-width:600px;
+	margin:10px auto;
+} */
+
+/* Button */
+:root {
+    --bg: rgb(243,243,243);
+    --color: rgb(255,178,0);
+    --font: Montserrat, Roboto, Helvetica, Arial, sans-serif;
+}
+
+.emailTemplate .wrapper {
+    padding: 20px 150px 40px;
+    filter: url('#goo');
+}
+
+.emailTemplate .button {
+    display: inline-block;
+    text-align: center;
+    background: rgb(29 90 143);
+    color: var(--bg);
+    font-weight: bold;
+    padding: 1.18em 1.32em 1.03em;
+    line-height: 1;
+    border-radius: 1em;
+    position: relative;
+    min-width: 8.23em;
+    text-decoration: none;
+    font-family: var(--font);
+    font-size: 1.75rem;
+}
+
+.emailTemplate .button:before,
+.emailTemplate .button:after {
+    width: 4.4em;
+    height: 2.95em;
+    position: absolute;
+    content: "";
+    display: inline-block;
+    background: rgb(29 90 143);
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    transform: scale(0);
+    z-index: -1;
+}
+
+.emailTemplate .button:before {
+    top: -25%;
+    left: 20%;
+}
+
+.emailTemplate .button:after {
+    bottom: -25%;
+    right: 20%;
+}
+
+.emailTemplate .button:hover:before,
+.emailTemplate .button:hover:after {
+    transform: none;
+}
+.emailTemplate a:hover{
+    color: #fff !important;
+}
+
+
+/* End Button */
+
+
+/* End Icon Social */
+.emailTemplate .social-image{
+    width: 31px;
+}
+
+ </style>      
+
+
+    </head>
+
+    <body style="background-color:#9AC2E4">
+        <div class="form emailTemplate">
+            <div class="form-small"; style="padding: 18px">
+                <div>
+                    <img class="mail-image" style="width: 180px;" alt="top image" src="assets/images/logo_300x72.png" alt="logo" >
+                </div>
+                <h1 class="h1-font">Email Confirmation<h1>
+                {content}
+                <div class="wrapper">
+                    <a class="button" href="#">Verify email address</a>
+                </div>
+
+                <!-- Filter: https://css-tricks.com/gooey-effect/ -->
+                <svg style="visibility: hidden; position: absolute;" width="0" height="0" xmlns="" version="1.1">
+                    <defs>
+                        <filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />    
+                            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+                            <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+                        </filter>
+                    </defs>
+                </svg>               
+            </div>
+
+            <div>
+                <h3 class="contact-font">Stay in touch<h3>
+
+                <div class="social-buttons" align="center">
+                    <a class=" facebook" href="{flink}">
+                        <img class="social-image" alt="top image" src="assets/images/facebook-gra.png" alt="logo" >
+                    </a>
+                    
+                    <a class=" twitter" href="{tlink}">
+                        <img class="social-image" alt="top image" src="assets/images/twitter-gra.png" alt="logo" >
+                    </a>
+                    
+                    <a class=" google" href="{ilink}">
+                        <img class="social-image" alt="top image" src="assets/images/instagram-gra.png" alt="logo" >
+                    </a>
+                </div>
+
+                <p class="p-footer">Email sent by {semail} <br>
+                    Copyrights © 2022 All rights Reserved.</p>
+            </div>
+        </div>
+    </body>
+</html>

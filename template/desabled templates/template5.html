@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+
+
+.bodydiv img {
+    max-width: 100%;
+}
+
+.bodydiv .collapse {
+    margin: 0;
+    padding: 0;
+}
+
+
+
+/* ------------------------------------- 
+		ELEMENTS 
+------------------------------------- */
+.bodydiv a {
+    color: #c31a45;
+}
+
+.bodydiv .btn {
+    text-decoration: none;
+    color: #FFF;
+    background-color: #666;
+    padding: 10px 16px;
+    font-weight: bold;
+    margin-right: 10px;
+    text-align: center;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.bodydiv .callout {
+padding: 15px;
+border-color: #ccc !important;
+margin-bottom: 15px;
+  
+border-top:1px dashed;
+  border-bottom:1px dashed;
+}
+.bodydiv .callout h1 {color:#532d42 !important;font-weight:bold}
+
+.bodydiv .callout a {
+    font-weight: bold;
+    font-family: sans-serif;
+   
+}
+
+.bodydiv table.social {
+/* 	padding:15px; */
+    background-color: #F4F5F6;
+  border-bottom: 1px solid #ccc;
+}
+
+.bodydiv .social .soc-btn {
+    padding: 3px 7px;
+    font-size: 12px;
+    margin-bottom: 10px;
+    text-decoration: none;
+    color: #FFF;
+    font-weight: bold;
+    text-align: center;
+}
+
+.bodydiv a.fb {
+    background-color: #3B5998!important;
+}
+
+.bodydiv a.tw {
+    background-color: #1daced!important;
+}
+
+.bodydiv a.gp {
+    background-color: #DB4A39!important;
+}
+
+.bodydiv a.ms {
+    background-color: #000!important;
+}
+
+.bodydiv .inline-button {padding: 5px 10px;
+  text-decoration:none;
+  cursor:pointer;
+font-size: 12px;
+line-height: 1.5;
+  border-radius: 3px;
+display: inline-block;
+margin-bottom: 0;
+font-weight: 400;
+text-align: center;
+vertical-align: middle;
+cursor: pointer;
+white-space: nowrap;
+padding: 6px 12px;
+font-size: 14px;
+line-height: 1.42857143;
+border-radius: 4px;
+-webkit-user-select: none;
+  color: #fff;
+background-color: #b32243;
+border-color: #512f40;
+  font-weight:normal !important
+}
+
+
+/* ------------------------------------- 
+		HEADER 
+------------------------------------- */
+.bodydiv table.head-wrap {
+    width: 100%;
+  border-bottom:1px solid #ccc;
+}
+
+.bodydiv .header.container table td.logo {
+    padding: 15px;
+}
+
+.bodydiv .header.container table td.label {
+    padding: 15px;
+    padding-left: 0px;
+}
+
+
+/* ------------------------------------- 
+		BODY 
+------------------------------------- */
+.bodydiv table.body-wrap {
+    width: 100%;
+}
+
+
+/* ------------------------------------- 
+		FOOTER 
+------------------------------------- */
+.bodydiv table.footer-wrap {
+    width: 100%;
+    clear: both!important;
+}
+
+.bodydiv .footer-wrap .container td.content  p {
+    border-top: 1px solid rgb(215,215,215);
+    padding-top: 15px;
+}
+
+.bodydiv .footer-wrap .container td.content p {
+    font-size: 10px;
+    font-weight: bold;
+}
+
+
+/* ------------------------------------- 
+		TYPOGRAPHY 
+------------------------------------- */
+.bodydiv h1,h2,h3,h4,h5,h6 {
+    font-family:sans-serif;
+    line-height: 1.1;
+    margin-bottom: 15px;
+    color: #777;
+}
+
+.bodydiv h1 small, h2 small, h3 small, h4 small, h5 small, h6 small {
+    font-size: 60%;
+    color: #6f6f6f;
+    line-height: 0;
+    text-transform: none;
+}
+
+.bodydiv h1 {
+    font-weight: 200;
+    font-size: 30px;
+}
+
+.bodydiv h2 {
+    font-weight: 200;
+    font-size: 26px;
+}
+
+.bodydiv h3 {
+    font-weight: 500;
+    font-size: 22px;
+}
+
+.bodydiv h4 {
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.bodydiv h5 {
+    font-weight: 900;
+    font-size: 16px;
+}
+
+.bodydiv h6 {
+    font-weight: 900;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #444;
+}
+
+.bodydiv .collapse {
+    margin: 0!important;
+}
+
+.bodydiv p, ul {
+    margin-bottom: 10px;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 1.6;
+    color:#052628;
+}
+
+.bodydiv p.lead {
+    font-size: 17px;
+  margin-bottom:30px;
+  letter-spacing: 0.5px;
+ 
+    text-align: justify;
+}
+
+.bodydiv p.last {
+    margin-bottom: 0px;
+}
+
+.bodydiv ul li {
+    margin-left: 5px;
+    list-style-position: inside;
+}
+
+
+/* --------------------------------------------------- 
+		RESPONSIVENESS
+		Nuke it from orbit. It's the only way to be sure. 
+------------------------------------------------------ */
+
+/* Set a max-width, and make it display as block so it will automatically stretch to that width, but will also shrink down on a phone or something */
+.bodydiv .container {
+	display:block!important;
+	max-width:600px!important;
+	margin:0 auto!important; /* makes it centered */
+	clear:both!important;
+}
+
+/* This should also be a block element, so that it will fill 100% of the .container */
+.bodydiv .content {
+	padding:15px;
+	max-width:600px;
+	margin:0 auto;
+	display:block; 
+}
+
+/* Let's make sure tables in the content area are 100% wide */
+.bodydiv .content table {
+    width: 100%;
+}
+
+
+/* Odds and ends */
+.bodydiv .column {
+    width: 300px;
+    float: left;
+}
+
+.bodydiv .column tr td {
+    padding: 15px;
+}
+
+.bodydiv .column-wrap {
+    padding: 0!important;
+    margin: 0 auto;
+    max-width: 600px!important;
+}
+
+.bodydiv .column table {
+    width: 100%;
+}
+
+.bodydiv .social .column {
+    width: 280px;
+    min-width: 279px;
+    float: left;
+}
+
+/* Be sure to place a .clear element after each set of columns, just to be safe */
+.bodydiv .clear {
+    display: block;
+    clear: both;
+}
+
+        </style>
+</head>
+
+<!-- HEADER -->
+<div class="bodydiv">
+<table class="head-wrap" bgcolor="#F4F5F6">
+	<tr>
+		<td></td>
+		<td class="header container">
+			
+				<div class="content">
+					<table bgcolor="#F4F5F6">
+					<tr>
+						<td><img src="assets/images/logo_300x72.png" width="120" /></td>
+						<td align="right"><h6 class="collapse">February, 2014</h6></td>
+					</tr>
+				</table>
+				
+		</td>
+		<td></td>
+	</tr>
+</table><!-- /HEADER -->
+
+
+<!-- BODY -->
+<table class="body-wrap">
+	<tr>
+		<td></td>
+		<td class="container" bgcolor="#FFFFFF">
+
+			<div class="content">
+			<table>
+				<tr>
+					<td>
+						
+						<h3>Hi, {name}</h3>
+						{content}
+            
+                        <tr>
+                            <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0;  width: 87.5%;padding-bottom: 20px;" class="button"><a href="#" style="text-decoration: none;">
+                                    <table border="0" cellpadding="0" cellspacing="0" align="center" style="max-width:150px; min-width: 120px; border-collapse: collapse; border-spacing: 0; padding: 0;"><tbody><tr><td align="center" valign="middle" style="padding: 10px 24px; margin: 0; text-decoration: none; border-collapse: collapse; border-spacing: 0; border-radius: 4px !important; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px;" bgcolor="#1D5A8F"><a style="text-decoration: none;
+                                        color: #FFFFFF; font-family: sans-serif; font-size: 17px; font-weight: 400; line-height: 120%;" href="#">
+                                            Click Here
+                                        </a>
+                                </td></tr></tbody></table></a>
+                            </td>
+                        </tr>
+											
+						<!-- social & contact -->
+						<table class="social" width="100%">
+        
+							<tr>
+								<td>
+
+									<!--- column 1 -->
+									<table align="left" class="column">
+										<tr>
+											<td>				
+												
+												<h5 class="">Connect with Us:</h5>
+												<p class=""><a href="{flink}" class="soc-btn fb">Facebook</a> <a href="{tlink}" class="soc-btn tw">Twitter</a> <a href="{ilink}" class="soc-btn gp">Instagram</a></p>
+											</td>
+										</tr>
+									</table><!-- /column 1 -->	
+									
+									<!--- column 2 -->
+									<table align="left" class="column">
+										<tr>
+											<td>				
+																			
+												<h5 class="">Have any question?</h5>												
+												<p>Call us: <strong>{phone}</strong><br/>
+                Mail us: <strong><a href="#">{semail}</a></strong></p>
+                
+											</td>
+										</tr>
+									</table><!-- /column 2 -->
+									
+									<span class="clear"></span>	
+									
+								</td>
+							</tr>
+						</table><!-- /social & contact -->
+					
+					
+					</td>
+				</tr>
+			</table>
+									
+		</td>
+		<td></td>
+	</tr>
+</table><!-- /BODY -->
+
+<!-- FOOTER -->
+<table class="footer-wrap">
+	<tr>
+		<td></td>
+		<td class="container">
+			
+				<!-- content -->
+				<div class="content">
+				<table>
+				<tr>
+					<td align="center">
+						<p>
+							<a href="#">Terms</a> |
+							<a href="#">Privacy</a> |
+							<a href="#"><unsubscribe>Unsubscribe</unsubscribe></a>
+						</p>
+					</td>
+				</tr>
+			</table><!-- /content -->
+				
+		</td>
+		<td></td>
+	</tr>
+</table><!-- /FOOTER -->
+</div>
+</html>
