@@ -1,24 +1,23 @@
 module.exports = app => {
-  // const login = require("../controllers/customer.login.controller.js");
-  const control = require("../controllers/customer.controller.js");
-  const { authJwt } = require("../middleware");
-  const upload = require("../middleware/upload");
+const control = require("../controllers/enquiry.controller.js");
+const upload = require("../middleware/upload");
+const { authJwt } = require("../middleware");
+
   var router = require("express").Router();
+
+  // Create a new record
   //router.post("/", upload.fields([{name: "photo", maxCount: 1},{name: "photos", maxCount: 1}]), control.create);
-  router.post("/", control.create);
+  router.post("/", [authJwt.verifyToken], control.create);
 
   // Retrieve all records
   router.get("/", [authJwt.verifyToken], control.findAll);
 
-   // Retrieve all records
-   router.get("/list", [authJwt.verifyToken], control.findList);
-
   // Retrieve all trash records
-  //router.get("/trashall", [authJwt.verifyToken], control.trashAll);
+  router.get("/trashall", [authJwt.verifyToken], control.trashAll);
 
   // Update selected records
   router.get("/updateall", [authJwt.verifyToken], control.updateAll);
-  
+
   // Retrieve all published records
   router.get("/exceldoc", [authJwt.verifyToken], control.exceldoc);
 
@@ -31,8 +30,14 @@ module.exports = app => {
   // Retrieve a single record with id
   router.get("/:id", [authJwt.verifyToken], control.findOne);
 
+  // Change Login with id
+  router.get("/activity/:id", control.activity);
+
   // Update a record with id
-  router.post("/:id", upload.single("photo"), control.update);
+  router.post("/:id", [authJwt.verifyToken], control.update);
+
+  // Update a record with id
+  router.post("/profilepic/:id", upload.single("profilepic"), control.profilepic);
 
   // Update a columns with id
   router.post("/columns/:id", control.updateColumns);
@@ -52,5 +57,5 @@ module.exports = app => {
     next();
   });
 
-  app.use("/api/customer", router);
+  app.use("/api/enquiry", router);
 };

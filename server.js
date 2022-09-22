@@ -333,6 +333,18 @@ require("./app/routes/dashboard.routes")(app);
 require("./app/routes/state.routes")(app);
 require("./app/routes/city.routes")(app);
 require("./app/routes/customer.routes")(app);
+require("./app/routes/enquiry.routes")(app);
+require("./app/routes/suppliers.routes")(app);
+require("./app/routes/categories.routes")(app);
+require("./app/routes/products.routes")(app);
+require("./app/routes/billingrates.routes")(app);
+require("./app/routes/taxes.routes")(app);
+require("./app/routes/kits.routes")(app);
+require("./app/routes/purchases.routes")(app);
+require("./app/routes/quotes.routes")(app);
+require("./app/routes/invoices.routes")(app);
+require("./app/routes/jobs.routes")(app);
+require("./app/routes/connections.routes")(app);
 
 //The 404 Route (ALWAYS Keep this as the last route)
 app.get('*', function(req, res){

@@ -1,5 +1,5 @@
 const db = require("../models");
-const Table = db.customer;
+const Table = db.suppliers;
 const Admin = db.adminusers;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
@@ -84,8 +84,24 @@ exports.findAll = async(req, res) => {
     });
 };
 
+exports.findList = async(req, res) => {
+	Table.find({status:"Active"})
+	  .populate('createdBy')
+	  .populate('updatedBy')
+	  .then((data) => {
+		if (!data)
+		  res.status(404).send({ message: ms.messages[3].message });
+		else res.send({list:data});
+	  })
+	  .catch((err) => {
+		res.status(500).send({ message: ms.messages[3].message });
+	  });
+
+}
+
 // Find a single record with an id
 exports.findOne = async(req, res) => {
+	console.log("test");
 	var ms = await msg('Customer');
 	const id = req.params.id;
 	const ip = req.headers['x-forwarded-for'];
@@ -96,23 +112,6 @@ exports.findOne = async(req, res) => {
 		if (!data)
 		  res.status(404).send({ message: ms.messages[3].message });
 		else res.send(data);
-	  })
-	  .catch((err) => {
-		res.status(500).send({ message: ms.messages[3].message });
-	  });
-  };
-
-  // Find a single record with an id
-exports.findList = async(req, res) => {
-	
-	var ms = await msg('Customer');
-	Table.find({status:'Active'})
-	  .populate('createdBy')
-	  .populate('updatedBy')
-	  .then((data) => {
-		if (!data)
-		  res.status(404).send({ message: ms.messages[3].message });
-		else res.send({list:data});
 	  })
 	  .catch((err) => {
 		res.status(500).send({ message: ms.messages[3].message });

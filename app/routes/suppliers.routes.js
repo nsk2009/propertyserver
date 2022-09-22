@@ -1,6 +1,6 @@
 module.exports = app => {
   // const login = require("../controllers/customer.login.controller.js");
-  const control = require("../controllers/customer.controller.js");
+  const control = require("../controllers/suppliers.controller.js");
   const { authJwt } = require("../middleware");
   const upload = require("../middleware/upload");
   var router = require("express").Router();
@@ -10,8 +10,8 @@ module.exports = app => {
   // Retrieve all records
   router.get("/", [authJwt.verifyToken], control.findAll);
 
-   // Retrieve all records
-   router.get("/list", [authJwt.verifyToken], control.findList);
+  // Retrieve list records
+  router.get("/list", [authJwt.verifyToken], control.findList);
 
   // Retrieve all trash records
   //router.get("/trashall", [authJwt.verifyToken], control.trashAll);
@@ -52,5 +52,5 @@ module.exports = app => {
     next();
   });
 
-  app.use("/api/customer", router);
+  app.use("/api/suppliers", router);
 };
