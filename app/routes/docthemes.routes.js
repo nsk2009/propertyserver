@@ -1,23 +1,17 @@
 module.exports = app => {
-  const control = require("../controllers/jobs.controller.js");
+  const control = require("../controllers/billingrates.controller.js");
   const { authJwt } = require("../middleware");
 
   var router = require("express").Router();
 
   // Retrieve all records
-  router.get("/", [authJwt.verifyToken], control.findAll);
-
-  // Retrieve all records
-  router.get("/list", [authJwt.verifyToken], control.findList);
-
-  // Retrieve all records
-  router.get("/get", control.findStates);
+  router.get("/", control.findAll);
 
   // Create a records
   router.post("/add", [authJwt.verifyToken], control.create);
 
-  // Retrieve all trash records
-  router.get("/trashall", [authJwt.verifyToken], control.trashAll);
+  // Retrieve all city records specific state
+  router.get("/list", [authJwt.verifyToken], control.findList);
 
   // Retrieve a record
   router.get("/:id", [authJwt.verifyToken], control.findOne);
@@ -25,14 +19,13 @@ module.exports = app => {
   // update a records
   router.post("/:id", [authJwt.verifyToken], control.update);
 
-  // trash a records
-  router.get("/restore/:id", [authJwt.verifyToken], control.restore);
+  
+
+  // Retrieve active records
+  router.get("/get/:id", [authJwt.verifyToken], control.findCities);
 
   // trash a records
   router.get("/trash/:id", [authJwt.verifyToken], control.trash);
-
-  // Retrieve all history record with a id
-  router.get("/autoload/:id", [authJwt.verifyToken], control.autoload);
 
 
   // Headers aasign
@@ -44,5 +37,5 @@ module.exports = app => {
     next();
   });
 
-  app.use("/api/jobs", router);
+  app.use("/api/billingrates", router);
 };

@@ -151,7 +151,7 @@ exports.findOne = async(req, res) => {
   Table.findById(id)
     .populate('createdBy')
     .populate('modifiedBy')
-    .populate('category')
+    .populate('supplier')
     .then((data) => {
       if (!data)
       res.status(404).send({ message: "OK"});

@@ -19,11 +19,11 @@ exports.create = async(req, res) => {
   if (!req.body)
     return res.status(400).send({ message:ms.messages[0].message });
   const id = req.params.id;
-  Table.findOne({ $or: [{ name: req.body.name}], status: { $ne:'Trash' } })
-    .then((data) => {
-		if (data && data.name === req.body.name)
-			return res.status(400).send({ message:ms.messages[1].message });
-		else{
+//   Table.findOne({ $or: [{ name: req.body.name}], status: { $ne:'Trash' } })
+//     .then((data) => {
+// 		if (data && data.name === req.body.name)
+// 			return res.status(400).send({ message:ms.messages[1].message });
+// 		else{
 			 Table.create(req.body)
 			.then((data1) => {
 			  if (!data1) {
@@ -36,11 +36,11 @@ exports.create = async(req, res) => {
 			.catch((err) => {
 			  res.status(500).send({ message:ms.messages[0].message});
 			});
-    }
-  })
-  .catch((err) => {
-  res.status(500).send({ message: ms.messages[1].message });
-});
+    // }
+//   })
+//   .catch((err) => {
+//   res.status(500).send({ message: ms.messages[1].message });
+// });
 };
 
 // Retrieve all records from the database.
@@ -163,12 +163,12 @@ exports.update = async(req, res) => {
     return res.status(400).send({ message: ms.messages[0].message});
   const id = req.params.id;
 
-  Table.findOne({ $or: [{ name: req.body.name}], _id: { $ne : id}})
-    .then((data) => {
-		if (data && data.name === req.body.name)
-			return res.status(400).send({ message: ms.messages[1].message });
+//   Table.findOne({ $or: [{ name: req.body.name}], _id: { $ne : id}})
+//     .then((data) => {
+// 		if (data && data.name === req.body.name)
+// 			return res.status(400).send({ message: ms.messages[1].message });
 
-		else{
+// 		else{
 		  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 			.then((data) => {
 			  if (!data) {
@@ -182,11 +182,11 @@ exports.update = async(req, res) => {
 			.catch((err) => {
 				res.status(500).send({ message: ms.messages[0].message + err});
 			});
-		}
-      })
-	  .catch((err) => {
-      res.status(500).send({ message: ms.messages[0].message + err});
-	});
+		// }
+    //   })
+	//   .catch((err) => {
+    //   res.status(500).send({ message: ms.messages[0].message + err});
+	// });
 };
 
 exports.trash = async(req, res) => {

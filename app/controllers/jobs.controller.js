@@ -78,6 +78,35 @@ exports.findAll = async(req, res) => {
     });
 };
 
+// Find a subcription record with an provider id
+exports.autoload = async (req, res) => {
+
+  const id = req.params.id;
+  const { subsId, page1, page2, page3, page5, page8, page7 } = req.query;
+  /*const transactions = await Transactions.find({ customer_id: id }).populate([{ path: "advance_id", select: ["advance_amount", "advance_id"] }])
+    .populate([{ path: "sub_id", select: ["plan_amount", "subs_id"] }]).limit(Number(page8)).sort({ txndate: -1 });
+  const advances = await Advance.find({ customer_id: id }).limit(Number(page7)).sort({ advance_date: -1 });
+  const subscriptions = await Subscription.find({ customer_id: id }).limit(Number(page5)).sort({ createdAt: -1 });
+  var subsPayment = [];
+  if(subsId !== '' )
+  subsPayment = await Transactions.find({ type: "Subscription", sub_id: subsId }).limit(Number(page5)).populate(['customer_id', 'plan_id']).sort({ _id: -1 });
+  const notes = await Notes.find({ to: id }).limit(Number(page1)).populate(['createdBy']).sort({ _id: -1 });
+  const sms = await SMSnotifi.find({ user: id }).limit(Number(page3)).populate(['createdBy']).sort({ _id: -1 });
+  const email = await CustNotifi.find({ user: id }).limit(Number(page3)).populate(['createdBy']).sort({ _id: -1 });
+  const calls = await Calls.find({ customer_id: id }).limit(Number(page2)).populate(['createdBy']).sort({ _id: -1 });*/
+	
+  res.send({
+    transactions: [],
+    subscriptions: [],
+    advances: [],
+    notes: [],
+    smslist: [],
+    emaillist: [],
+    calls: [],
+	subsPayment : []
+  });
+};
+
 // Retrieve all records from the database.
 exports.findStates = async (req, res) => {
 	var ms = await msg('states');
