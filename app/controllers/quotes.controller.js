@@ -19,6 +19,8 @@ exports.create = async(req, res) => {
   if (!req.body)
     return res.status(400).send({ message:ms.messages[0].message });
   const id = req.params.id;
+//   req.body.quote_date=req.body.quote_date.toJSON().slice(0, 10).replace(/-/g, '-');
+//   req.body.expiry_date=req.body.expiry_date.toJSON().slice(0, 10).replace(/-/g, '-');
 //   Table.findOne({ $or: [{ name: req.body.name}], status: { $ne:'Trash' } })
 //     .then((data) => {
 // 		if (data && data.name === req.body.name)
@@ -162,6 +164,8 @@ exports.update = async(req, res) => {
   if (!req.body)
     return res.status(400).send({ message: ms.messages[0].message});
   const id = req.params.id;
+//   req.body.quote_date=req.body.quote_date.toJSON().slice(0, 10).replace(/-/g, '-');
+//   req.body.expiry_date=req.body.expiry_date.toJSON().slice(0, 10).replace(/-/g, '-');
 
 //   Table.findOne({ $or: [{ name: req.body.name}], _id: { $ne : id}})
 //     .then((data) => {
