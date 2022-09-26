@@ -1,6 +1,6 @@
 const config = require("../config/auth.config");
 const db = require("../models");
-const Table = db.adminusers;
+const Table = db.tradie;
 const Setting = db.settings;
 const Privilege = db.privileges;
 const activity = require("../middleware/activity");
@@ -57,8 +57,7 @@ exports.login = async (req, res, next) => {
 						format: set.dateformat,
 						zone: set.timezone,
 						username: data.username,
-						firstname: data.firstname,
-						lastname: data.lastname,
+						name: data.name,
 						photo: data.photo,
 						showcolumns: data.columns,
 						email: data.email,

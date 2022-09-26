@@ -6,7 +6,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 	  privileges: String,
     type: {
       type: String,
-      enum: ['Provider', 'Admin'],
+      enum: ['Tradie', 'Admin'],
     },
 	  createdBy: {
 			type: mongoose.Schema.Types.ObjectId,

@@ -6,6 +6,10 @@ module.exports = (mongoose, mongoosePaginate) => {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "customer"
 		},
+		tradie:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "tradie"
+		},
 		pricing_level: String,
 		site: String,
 		reference: String,

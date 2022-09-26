@@ -7,14 +7,30 @@ module.exports = (mongoose, mongoosePaginate) => {
       email: String,
       phone: String,
       abn:String,
+      photo:String,
+      cost:String,
+	  columns: [],
+      role: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "role"
+      },
+	  role: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "role"
+		},
       service:[],
       location : [],
       businesscertificate : String,
       liabilitycertificate : String,
       status: {
         type: String,
-        enum: ['Active', 'Inactive', 'Trash'],
-        default: 'Active'
+        enum: ['Pending', 'Approved', 'Declined', 'Trash'],
+        default: 'Pending'
+      },
+      type: {
+        type: String,
+        enum: ['Admin', 'Staff'],
+        default: 'Admin'
       },
       createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -23,6 +39,14 @@ module.exports = (mongoose, mongoosePaginate) => {
       modifiedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "adminuser"
+      },
+      tcreatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "tradie"
+      },
+      tmodifiedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "tradie"
       },
     },
     { timestamps: true }

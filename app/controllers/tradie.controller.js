@@ -51,7 +51,7 @@ exports.create = async(req, res) => {
 
 // Retrieve all records from the database.
 exports.findAll = async(req, res) => {
-  const { page, size, search, field, dir, status, show } = req.query;
+  const { page, size, search, field, dir, status, show, type } = req.query;
   var sortObject = {};
   if(search){
   var users = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }
@@ -67,10 +67,11 @@ exports.findAll = async(req, res) => {
 
   condition.status = status ? status : { $ne : 'Trash'};
   if(show) condition.show = show;
+  if(type) condition.type = type;
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
-  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy'], offset, limit, sort: sortObject })
+  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy','tcreatedBy', 'tmodifiedBy'], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
         totalItems: data.totalDocs,

@@ -4,7 +4,7 @@ const Dateformat = db.dateformat;
 const Timezone = db.timezone;
 const Emailapi = db.emailapi;
 const Smsapi = db.smsapi;
-const Paymentapi = db.paymentapi;
+const Paymentapi = db.accountingapis;
 const Transactions = db.transactions;
 const activity = require("../middleware/activity");
 

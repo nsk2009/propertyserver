@@ -1,7 +1,7 @@
 const db = require("../models");
 const Table = db.columns;
 const Users = db.adminusers;
-const Providers = db.providers;
+const Tradie = db.tradie;
 const Team = db.teamusers;
 
 const getPagination = (page, size) => {
@@ -38,17 +38,12 @@ exports.create = (req, res) => {
 						  });
 					  });
 					}
-					if(req.body.type === 'Provider'){
-					  Providers.find({}, { columns: 1 }).then((user) => {
+					if(req.body.type === 'Tradie'){
+					  Tradie.find({}, { columns: 1 }).then((user) => {
 						  user.forEach(function(use, err) {
-							  Providers.findByIdAndUpdate(use._id, { columns: info }, { useFindAndModify: false }).then();
+							  Tradie.findByIdAndUpdate(use._id, { columns: info }, { useFindAndModify: false }).then();
 						  });
 					  });
-					  Team.find({}, { columns: 1 }).then((user) => {
-						user.forEach(function(use, err) {
-							Team.findByIdAndUpdate(use._id, { columns: info }, { useFindAndModify: false }).then();
-						});
-					});
 					}					
 				  });
 				  res.send({ message: "Record was updated successfully." });
@@ -135,17 +130,12 @@ exports.update = (req, res) => {
 						  });
 					  });
 					}
-					if(req.body.type === 'Provider'){
-					  Providers.find({}, { columns: 1 }).then((user) => {
+					if(req.body.type === 'Tradie'){
+					  Tradie.find({}, { columns: 1 }).then((user) => {
 						  user.forEach(function(use, err) {
-							  Providers.findByIdAndUpdate(use._id, { columns: info }, { useFindAndModify: false }).then();
+							  Tradie.findByIdAndUpdate(use._id, { columns: info }, { useFindAndModify: false }).then();
 						  });
 					  });
-					  Team.find({}, { columns: 1 }).then((user) => {
-						user.forEach(function(use, err) {
-							Team.findByIdAndUpdate(use._id, { columns: info }, { useFindAndModify: false }).then();
-						});
-					});
 					}					
 				  });
 				  res.send({ message: "Record was updated successfully." });

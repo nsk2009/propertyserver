@@ -13,7 +13,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 		},
       type: {
         type: String,
-        enum : ['Admin','Provider'],
+        enum : ['Admin','Tradie'],
         default: 'Admin'
         },
       status: {

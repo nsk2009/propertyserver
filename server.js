@@ -347,6 +347,7 @@ require("./app/routes/jobs.routes")(app);
 require("./app/routes/connections.routes")(app);
 require("./app/routes/docthemes.routes")(app);
 require("./app/routes/tradie.routes")(app);
+require("./app/routes/tradielogin.routes")(app);
 
 //The 404 Route (ALWAYS Keep this as the last route)
 app.get('*', function(req, res){
