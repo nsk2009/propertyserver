@@ -4,6 +4,7 @@ const session = require('express-session');
 const parseurl = require('parseurl');
 const nodemailer = require("nodemailer");
 const cron = require("node-cron");
+inspect = require('util').inspect;
 // const bodyParser = require("body-parser"); /* deprecated */
 const cors = require("cors");
 const app = express();
@@ -13,6 +14,23 @@ var corsOptions = {
 };
 
 global.__basedir = __dirname;
+
+// net = require("net")
+
+// net.createServer((socket) =>{
+//   //just added
+//   socket.on("error", (err) =>{
+//     console.log("Caught flash policy server socket error: ")
+//     console.log(err.stack)
+//   })
+
+//   socket.write("<?xml version=\"1.0\"?>\n")
+//   socket.write("<!DOCTYPE cross-domain-policy SYSTEM \"http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd\">\n")
+//   socket.write("<cross-domain-policy>\n")
+//   socket.write("<allow-access-from domain=\"*\" to-ports=\"*\"/>\n")
+//   socket.write("</cross-domain-policy>\n")
+//   socket.end()
+// }).listen(843)
 
 
 //global.templateLink = 'http://192.168.0.107:3000/#/';
@@ -59,10 +77,12 @@ db.mongoose
     console.log("Cannot connect to the database!", err);
     process.exit();
   });
-  
+
 // simple route
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to server application." });
+  
+  
   // var CryptoJS = require("crypto-js");
   // const key = '9BA569F84818BE66';
   //       const keyutf = CryptoJS.enc.Utf8.parse(key);
@@ -348,6 +368,7 @@ require("./app/routes/connections.routes")(app);
 require("./app/routes/docthemes.routes")(app);
 require("./app/routes/tradie.routes")(app);
 require("./app/routes/tradielogin.routes")(app);
+require("./app/routes/inbox.routes")(app);
 
 //The 404 Route (ALWAYS Keep this as the last route)
 app.get('*', function(req, res){

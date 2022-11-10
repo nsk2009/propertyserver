@@ -2,12 +2,14 @@ const db = require("../models");
 const Table = db.enquiry;
 const Role = db.role;
 const Columns = db.columns;
+const Setting = db.settings;
 const excel = require("exceljs");
 const msg = require("../middleware/message");
 const email = require("../middleware/email");
 const activity = require("../middleware/activity");
 const fileReader = require("../middleware/filereader");
-
+var sprintf = require('sprintf-js').sprintf;
+const settings_id = '6275f6aae272a53cd6908c8d';
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
   const offset = page ? page * limit : 0;
@@ -17,8 +19,11 @@ const getPagination = (page, size) => {
 // Create and Save a new record
 exports.create = async(req, res) => {
   var ms = await msg('enquiry');
-  if (!req.body.name)    
+  var set = await Setting.findById(settings_id).then();
+	var Autoid = sprintf('%01d', set.enquiries);
+  if (!req.body.title)    
     return res.status(400).send({ message: ms.messages[2].message });
+    req.body.uid="ENQ"+Autoid;
 			Table.create(req.body)
 			.then(async(data) => {
 			  if (!data) {
@@ -27,7 +32,8 @@ exports.create = async(req, res) => {
 			  else {				  
 				//await email('627a49c8968ec71b14435192', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${cmsLink}register/${data.id}`});      
 				activity(ms.messages[0].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
-				  res.send({ message: ms.messages[0].message });
+        await Setting.findByIdAndUpdate(settings_id, { enquiries: set.enquiries + 1 }, { useFindAndModify: false });
+         res.send({ message: ms.messages[0].message });
 			  }
 			})
 			.catch((err) => {
@@ -59,12 +65,13 @@ exports.findAll = async(req, res) => {
   condition._id = { $ne : '61efce935f2e3c054819a02f'};
   const crby = ({path: 'createdBy', select: {'firstname': 1, 'lastname': 1}});
   const mfby = {path: 'modifiedBy', select: {'firstname': 1, 'lastname': 1}}; 
+  const cust = {path: 'customer', select: {'firstname': 1, 'lastname': 1}}; 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
 //condition = {};
   //condition._id = { $ne : '61efce935f2e3c054819a02f'};
   //condition.role.name = { $ne : null};
-  Table.paginate(condition, { collation: { locale: "en" }, populate: [crby, mfby], offset, limit, sort: sortObject })
+  Table.paginate(condition, { collation: { locale: "en" }, populate: [crby, mfby, cust], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
         totalItems: data.totalDocs,
@@ -113,6 +120,7 @@ exports.findOne = async(req, res) => {
   Table.findById(id)
     .populate('createdBy')
     .populate('modifiedBy')
+    .populate('customer')
     .populate('role')
     .then((data) => {
       if (!data)
@@ -143,6 +151,7 @@ exports.updateAll = async(req, res) => {
 // Update a record by the id in the request
 exports.update = async(req, res) => {  
   var ms = await msg('enquiry');
+  //console.log(req.body);
   if (!req.body)
     return res.status(400).send({ message: ms.messages[2].message});
   const id = req.params.id;  
@@ -150,15 +159,15 @@ exports.update = async(req, res) => {
 		  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 			.then((data) => {
 			  if (!data) {
-				res.status(404).send({ message: ms.messages[8].message});
+				res.status(404).send({ message: ms.messages[7].message});
 			  } 
 			  else {				  
-				activity(ms.messages[1].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+				// activity(ms.messages[1].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
 				  res.send({ message: ms.messages[1].message });
 			  }
 			})
 			.catch((err) => {
-				res.status(500).send({ message: ms.messages[4].message});
+				res.status(500).send({ message: ms.messages[2].message});
 			});
 
 };
@@ -194,7 +203,7 @@ const id = req.params.id;
     } else res.send({ message: "Column settings has been successfully updated." });
   })
   .catch((err) => {
-      res.status(500).send({ message: ms.messages[8].message});
+      res.status(500).send({ message: "Oops! Columns can't be updated"});
   });
 
 };

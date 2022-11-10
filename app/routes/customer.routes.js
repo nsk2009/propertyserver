@@ -28,6 +28,9 @@ module.exports = app => {
   // Restore a record status with id
   router.get("/restore/:id", [authJwt.verifyToken], control.restore);
 
+  // Restore a record status with id
+  router.get("/details/:id", [authJwt.verifyToken], control.details);
+
   // Retrieve a single record with id
   router.get("/:id", [authJwt.verifyToken], control.findOne);
 

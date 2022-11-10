@@ -1,8 +1,11 @@
 const db = require("../models");
 const Table = db.invoices;
 const Admin = db.adminusers;
+const Setting = db.settings;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
+var sprintf = require('sprintf-js').sprintf;
+const settings_id = '6275f6aae272a53cd6908c8d';
 
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
@@ -15,32 +18,36 @@ const getPagination = (page, size) => {
 // Create and Save a new record
 exports.create = async(req, res) => {
   const result = await Table.find({status: { $ne: 'Trash'} });
-  var ms = await msg('kits');
+  var set = await Setting.findById(settings_id).then();
+  var Autoid = sprintf('%01d', set.invoice);
+  var ms = await msg('invoices');
   if (!req.body)
-    return res.status(400).send({ message:ms.messages[0].message });
+    return res.status(400).send({ message:ms.messages[1].message });
   const id = req.params.id;
-  Table.findOne({ $or: [{ name: req.body.name}], status: { $ne:'Trash' } })
-    .then((data) => {
-		if (data && data.name === req.body.name)
-			return res.status(400).send({ message:ms.messages[1].message });
-		else{
+//   Table.findOne({ $or: [{ name: req.body.name}], status: { $ne:'Trash' } })
+//     .then((data) => {
+// 		if (data && data.name === req.body.name)
+// 			return res.status(400).send({ message:ms.messages[1].message });
+// 		else{
+			req.body.uid =  'IN' + Autoid;
 			 Table.create(req.body)
-			.then((data1) => {
+			.then(async(data1) => {
 			  if (!data1) {
-				res.status(404).send({ message: ms.messages[0].message});
+				res.status(404).send({ message: ms.messages[1].message});
 			  } else {
-          activity(req.body.name+' module. '+ms.messages[3].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
-          res.send({ message: ms.messages[3].message });
+          activity(req.body.name+' module. '+ms.messages[0].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+		  await Setting.findByIdAndUpdate(settings_id, { invoice: set.invoice + 1 }, { useFindAndModify: false });
+          res.send({ message: ms.messages[0].message });
       }
 			})
 			.catch((err) => {
-			  res.status(500).send({ message:ms.messages[0].message});
+			  res.status(500).send({ message:ms.messages[1].message});
 			});
-    }
-  })
-  .catch((err) => {
-  res.status(500).send({ message: ms.messages[1].message });
-});
+//     }
+//   })
+//   .catch((err) => {
+//   res.status(500).send({ message: ms.messages[1].message });
+// });
 };
 
 // Retrieve all records from the database.
@@ -64,7 +71,7 @@ exports.findAll = async(req, res) => {
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
-  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer'], offset, limit, sort: sortObject })
+  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer', 'job'], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
         totalItems: data.totalDocs,
@@ -140,7 +147,7 @@ exports.trashAll = async(req, res) => {
 // Find a single record with an id
 exports.findOne = async(req, res) => {
   const id = req.params.id;
-  var ms = await msg('states');
+  var ms = await msg('invoices');
   Table.findById(id)
     .populate('createdBy')
     .populate('modifiedBy')
@@ -158,91 +165,91 @@ exports.findOne = async(req, res) => {
 
 // Update a record by the id in the request
 exports.update = async(req, res) => {
-  var ms = await msg('states');
+  var ms = await msg('invoices');
   if (!req.body)
-    return res.status(400).send({ message: ms.messages[0].message});
+    return res.status(400).send({ message: ms.messages[3].message});
   const id = req.params.id;
 
-  Table.findOne({ $or: [{ name: req.body.name}], _id: { $ne : id}})
-    .then((data) => {
-		if (data && data.name === req.body.name)
-			return res.status(400).send({ message: ms.messages[1].message });
+//   Table.findOne({ $or: [{ name: req.body.name}], _id: { $ne : id}})
+//     .then((data) => {
+// 		if (data && data.name === req.body.name)
+// 			return res.status(400).send({ message: ms.messages[3].message });
 
-		else{
+// 		else{
 		  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 			.then((data) => {
 			  if (!data) {
-				res.status(404).send({ message: ms.messages[0].message + err});
+				res.status(404).send({ message: ms.messages[3].message + err});
 			  }
 			  else {
-				activity(ms.messages[4].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
-				  res.send({ message: ms.messages[4].message });
+				activity(ms.messages[2].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+				  res.send({ message: ms.messages[2].message });
 			  }
 			})
 			.catch((err) => {
-				res.status(500).send({ message: ms.messages[0].message + err});
+				res.status(500).send({ message: ms.messages[3].message + err});
 			});
-		}
-      })
-	  .catch((err) => {
-      res.status(500).send({ message: ms.messages[0].message + err});
-	});
+	// 	}
+    //   })
+	//   .catch((err) => {
+    //   res.status(500).send({ message: ms.messages[3].message + err});
+	// });
 };
 
 exports.trash = async(req, res) => {
-	var ms = await msg('states');
+	var ms = await msg('invoices');
 	const id = req.params.id;
 
 	Table.findById(id)
 	  .then((data) => {
 		if (!data)
-		  res.status(404).send({ message: ms.messages[0].message });
+		  res.status(404).send({ message: ms.messages[6].message });
 		else {
 			Table.findByIdAndUpdate(id, {status : 'Trash'}, { useFindAndModify: false })
-			.then((data) => {
-			  if (!data) {
-				res.status(404).send({ message: ms.messages[0].message});
-			  }
-			  else {
-				activity(ms.messages[5].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.delete);
-				  res.send({ message: ms.messages[5].message });
-			  }
-			})
-			.catch((err) => {
-				res.status(500).send({ message: ms.messages[0].message});
-			});
-		}
-	  })
-	  .catch((err) => {
-      res.status(500).send({ message: ms.messages[0].message});
-	  });
-};
-
-exports.restore = async(req, res) => {
-  var ms = await msg('states');
-	const id = req.params.id;
-
-	Table.findById(id)
-	  .then((data) => {
-		if (!data)
-		  res.status(404).send({ message: ms.messages[0].message });
-		else {
-			Table.findByIdAndUpdate(id, {status : 'Active'}, { useFindAndModify: false })
 			.then((data) => {
 			  if (!data) {
 				res.status(404).send({ message: ms.messages[6].message});
 			  }
 			  else {
-				activity(ms.messages[6].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.restore);
-				  res.send({ message: ms.messages[6].message });
+				activity(ms.messages[4].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.delete);
+				  res.send({ message: ms.messages[4].message });
 			  }
 			})
 			.catch((err) => {
-				res.status(500).send({ message: ms.messages[0].message});
+				res.status(500).send({ message: ms.messages[6].message});
 			});
 		}
 	  })
 	  .catch((err) => {
-      res.status(500).send({ message: ms.messages[0].message});
+      res.status(500).send({ message: ms.messages[6].message});
+	  });
+};
+
+exports.restore = async(req, res) => {
+  var ms = await msg('invoices');
+	const id = req.params.id;
+
+	Table.findById(id)
+	  .then((data) => {
+		if (!data)
+		  res.status(404).send({ message: ms.messages[7].message });
+		else {
+			Table.findByIdAndUpdate(id, {status : 'Active'}, { useFindAndModify: false })
+			.then((data) => {
+			  if (!data) {
+				res.status(404).send({ message: ms.messages[7].message});
+			  }
+			  else {
+				activity(ms.messages[5].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.restore);
+				  res.send({ message: ms.messages[5].message });
+			  }
+			})
+			.catch((err) => {
+				res.status(500).send({ message: ms.messages[7].message});
+			});
+		}
+	  })
+	  .catch((err) => {
+      res.status(500).send({ message: ms.messages[7].message});
 	  });
 };

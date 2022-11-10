@@ -13,20 +13,34 @@ module.exports = (mongoose, mongoosePaginate) => {
 		reference: String,
 		doc_theme: String,
 		description: String,
+		subtotal: String,
+		grosstotal: String,
+		discamt: String,
+		taxamt: String,
+		total: String,
+		discount: String,
+		distype: String,
+		taxrate: String,
+		taxtype: String,
+		taxid:{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "taxes"
+		},
+		taxname: String,
+		tax: String,
 		terms:String,
 		notes:Array,
+		uid:String,
 		items: Array,
+		tradie:{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "tradie"
+		},
 		status: {
 			type: String,
 			enum : ['Active','Inactive','Trash'],
 			default: 'Active'
 		}, 
-		tax: {
-			type: String,
-			enum : ['Inclusive','Exclusive','No_tax'],
-			default: 'Exclusive'
-		},
-	
 		createdBy: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "adminuser"

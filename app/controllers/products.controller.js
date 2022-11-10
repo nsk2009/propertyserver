@@ -16,35 +16,35 @@ const getPagination = (page, size) => {
 // Create and Save a new record
 exports.create = async (req, res) => {
 
-  // var ms = await msg('cities');
+   var ms = await msg('products');
 
   if (!req.body)
-    return res.status(400).send({ message: "ms.messages[0].message" });
+    return res.status(400).send({ message: ms.messages[1].message });
 
   Table.findOne({ name: req.body.name, status: { $ne: 'Trash' } })
     .then(data => {
       if (data)
-        return res.status(404).send({ message: "ms.messages[1].message "});
+        return res.status(404).send({ message: ms.messages[2].message });
       else {
         Table.create(req.body)
           .then(data => {
-            activity(req.body.name + ' Product ' + "ms.messages[2].message", req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
-            res.send({ message: "Product Added Successfully!" });
+            activity(req.body.name + ' Product ' + ms.messages[0].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+            res.send({ message: ms.messages[0].message});
           })
           .catch((err) => {
-            res.status(400).send({ message:" ms.messages[3].message" });
+            res.status(400).send({ message: ms.messages[1].message });
           });
       }
     })
     .catch((err) => {
-      res.status(400).send({ message:" ms.messages[0].message" });
+      res.status(400).send({ message: ms.messages[9].message });
     });
 };
 
 // Retrieve all records from the database.
 exports.findAll = async (req, res) => {
 
-  var ms = await msg('cities');
+  var ms = await msg('products');
   const { page, size, search, field, dir, status, state, show } = req.query;
   var sortObject = {};
 
@@ -108,7 +108,7 @@ exports.findCities = async (req, res) => {
 // Retrieve records only status "Active" & show "yes".
 exports.findList = async (req, res) => {
 
-  var ms = await msg('cities');
+  var ms = await msg('products');
   
 
   Table.find({ status: 'Active' })
@@ -117,7 +117,7 @@ exports.findList = async (req, res) => {
       res.send({ list: data });
     })
     .catch((err) => {
-      res.send({ message: ms.messages[4].message });
+      res.send({ message: ms.messages[9].message });
     });
 
 };
@@ -126,17 +126,17 @@ exports.findList = async (req, res) => {
 exports.findOne = async (req, res) => {
 
   const id = req.params.id;
-  var ms = await msg('cities');
+  var ms = await msg('products');
 
   Table.findById(id).populate({ path: "createdBy", select: ["firstname", "lastname"] }).populate({ path: "modifiedBy", select: ["firstname", "lastname"] }).populate({ path: "category", select: ["name"] }).populate({ path: "supplier", select: ["suppliername"] })
     .then(data => {
       if (!data)
-        res.status(404).send({ message: ms.messages[5].message });
+        res.status(404).send({ message: ms.messages[9].message });
       else
         res.send(data);
     })
     .catch((err) => {
-      res.status(404).send({ message: ms.messages[4].message });
+      res.status(404).send({ message: ms.messages[9].message });
     });
 };
 
@@ -145,44 +145,20 @@ exports.findOne = async (req, res) => {
 exports.update = async (req, res) => {
 
   const id = req.params.id;
-  var ms = await msg('cities');
+  var ms = await msg('products');
 
   if (!req.body)
-    return res.status(400).send({ message: ms.messages[0].message });
+    return res.status(400).send({ message: ms.messages[4].message });
 
   Table.findOne({ name: req.body.name, state_id: req.body.state_id, _id: { $ne: id } })
     .then(data => {
       if (data)
-        return res.status(400).send({ message: ms.messages[1].message });
+        return res.status(400).send({ message: ms.messages[2].message });
       else {
         Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
           .then(data => {
-            activity(ms.messages[6].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
-            res.status(200).send({ message: ms.messages[6].message });
-          })
-          .catch((err) => {
-            res.status(400).send({ message: ms.messages[7].message });
-          });
-      }
-    })
-    .catch((err) => {
-      res.status(400).send({ message: ms.messages[0].message });
-    });
-};
-
-exports.trash = async (req, res) => {
-  var ms = await msg('cities');
-  const id = req.params.id;
-
-  Table.findById(id)
-    .then(data => {
-      if (!data)
-        res.status(404).send({ message: ms.messages[4].message });
-      else {
-        Table.findByIdAndUpdate(id, { status: 'Trash' }, { useFindAndModify: false })
-          .then(data => {
-            activity(ms.messages[8].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.delete);
-            res.send({ message: ms.messages[8].message });
+            activity(req.body.name + ms.messages[3].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+            res.status(200).send({ message: ms.messages[3].message });
           })
           .catch((err) => {
             res.status(400).send({ message: ms.messages[9].message });
@@ -190,6 +166,30 @@ exports.trash = async (req, res) => {
       }
     })
     .catch((err) => {
-      res.status(500).send({ message: ms.messages[5].message });
+      res.status(400).send({ message: ms.messages[9].message });
+    });
+};
+
+exports.trash = async (req, res) => {
+  var ms = await msg('products');
+  const id = req.params.id;
+
+  Table.findById(id)
+    .then(data => {
+      if (!data)
+        res.status(404).send({ message: ms.messages[6].message });
+      else {
+        Table.findByIdAndUpdate(id, { status: 'Trash' }, { useFindAndModify: false })
+          .then(data => {
+            activity(ms.messages[5].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.delete);
+            res.send({ message: ms.messages[5].message });
+          })
+          .catch((err) => {
+            res.status(400).send({ message: ms.messages[6].message });
+          });
+      }
+    })
+    .catch((err) => {
+      res.status(500).send({ message: ms.messages[9].message });
     });
 };

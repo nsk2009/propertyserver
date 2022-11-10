@@ -5,7 +5,7 @@ module.exports = app => {
   const upload = require("../middleware/upload");
   var router = require("express").Router();
   //router.post("/", upload.fields([{name: "photo", maxCount: 1},{name: "photos", maxCount: 1}]), control.create);
-  router.post("/", control.create);
+  router.post("/",upload.fields([{name:"bcertificate",maxCount:1},{name:"lcertificate",maxCount:1}]), control.create);
 
   // Retrieve all records
   router.get("/", [authJwt.verifyToken], control.findAll);
@@ -28,11 +28,20 @@ module.exports = app => {
   // Restore a record status with id
   router.get("/restore/:id", [authJwt.verifyToken], control.restore);
 
+  // Mogin set for tradie with id
+  router.post("/morgin/:id", [authJwt.verifyToken], control.morgin);
+
+  // Retrieve all history record with a id
+  router.get("/details/:id", [authJwt.verifyToken], control.details);
+
+  // Retrieve all history record with a id
+  router.get("/history/:id", [authJwt.verifyToken], control.findAllHistory);
+
   // Retrieve a single record with id
   router.get("/:id", [authJwt.verifyToken], control.findOne);
 
   // Update a record with id
-  router.post("/:id", upload.single("photo"), control.update);
+  router.post("/:id",upload.fields([{name:"bcertificate",maxCount:1},{name:"lcertificate",maxCount:1}]), control.update);
 
   // Update a columns with id
   router.post("/columns/:id", control.updateColumns);

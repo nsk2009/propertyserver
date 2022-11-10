@@ -1,8 +1,12 @@
 const db = require("../models");
 const Table = db.jobs;
+const Invoice = db.invoices;
 const Admin = db.adminusers;
+const Setting = db.settings;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
+var sprintf = require('sprintf-js').sprintf;
+const settings_id = '6275f6aae272a53cd6908c8d';
 
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
@@ -15,28 +19,32 @@ const getPagination = (page, size) => {
 // Create and Save a new record
 exports.create = async(req, res) => {
   const result = await Table.find({status: { $ne: 'Trash'} });
+  var set = await Setting.findById(settings_id).then();
+  var Autoid = sprintf('%01d', set.job);
   var ms = await msg('jobs');
   if (!req.body)
     return res.status(400).send({ message:ms.messages[0].message });
   const id = req.params.id;
   Table.findOne({ $or: [{ name: req.body.name}], status: { $ne:'Trash' } })
     .then((data) => {
-		if (data && data.name === req.body.name)
-			return res.status(400).send({ message:ms.messages[1].message });
-		else{
+		/*if (data && data.name === req.body.name)
+			return res.status(400).send({ message:'test' });
+		else{*/
+			req.body.uid="JOB" + Autoid;
 			 Table.create(req.body)
-			.then((data1) => {
+			.then(async(data1) => {
 			  if (!data1) {
 				res.status(404).send({ message: ms.messages[0].message});
 			  } else {
           activity(req.body.name+' module. '+ms.messages[3].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+		  await Setting.findByIdAndUpdate(settings_id, { job: set.job + 1 }, { useFindAndModify: false }); 
           res.send({ message: ms.messages[3].message });
       }
 			})
 			.catch((err) => {
 			  res.status(500).send({ message:ms.messages[0].message});
 			});
-    }
+    //}
   })
   .catch((err) => {
   res.status(500).send({ message: ms.messages[1].message });
@@ -64,7 +72,7 @@ exports.findAll = async(req, res) => {
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
-  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer'], offset, limit, sort: sortObject })
+  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer', 'tradie'], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
         totalItems: data.totalDocs,
@@ -165,7 +173,6 @@ exports.trashAll = async(req, res) => {
     });
 };
 
-
 // Find a single record with an id
 exports.findOne = async(req, res) => {
   const id = req.params.id;
@@ -185,6 +192,36 @@ exports.findOne = async(req, res) => {
 };
 
 
+// Find a single record with an id
+exports.makeinvoice = async(req, res) => {
+  const id = req.params.id;
+  const data = await Table.findById(id);
+  var info = {};  
+  var set = await Setting.findById(settings_id).then();
+  var Autoid = sprintf('%01d', set.invoice);
+  info.uid = "INV" + Autoid;
+  info.job = id;
+  info.customer = data.customer;
+  info.items = data.items;
+  info.subtotal = data.subtotal;
+  info.grosstotal = data.grosstotal;
+  info.discamt = data.discamt;
+  info.taxamt = data.taxamt;
+  info.total = data.total;
+  info.discount = data.discount;
+  info.distype = data.distype;
+  info.taxrate = data.taxrate;
+  info.taxtype = data.taxtype;
+  info.taxid = data.taxid;
+  info.taxname = data.taxname;
+  info.tax = data.tax;
+  info.createdBy = req.headers["user"];
+  var inv = await Invoice.create(info);
+  await Setting.findByIdAndUpdate(settings_id, { invoice: set.invoice + 1 }, { useFindAndModify: false }); 
+  res.send({ message: "Job has beeen successfully convert as invoice", id: inv.id});
+};
+
+
 // Update a record by the id in the request
 exports.update = async(req, res) => {
   var ms = await msg('states');
@@ -194,10 +231,10 @@ exports.update = async(req, res) => {
 
   Table.findOne({ $or: [{ name: req.body.name}], _id: { $ne : id}})
     .then((data) => {
-		if (data && data.name === req.body.name)
+		/*if (data && data.name === req.body.name)
 			return res.status(400).send({ message: ms.messages[1].message });
 
-		else{
+		else{*/
 		  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 			.then((data) => {
 			  if (!data) {
@@ -211,7 +248,7 @@ exports.update = async(req, res) => {
 			.catch((err) => {
 				res.status(500).send({ message: ms.messages[0].message + err});
 			});
-		}
+		//}
       })
 	  .catch((err) => {
       res.status(500).send({ message: ms.messages[0].message + err});

@@ -7,6 +7,7 @@ const Smsapi = db.smsapi;
 const Paymentapi = db.accountingapis;
 const Transactions = db.transactions;
 const activity = require("../middleware/activity");
+var fs = require('fs');
 
 // Find a single record with an id
 exports.findOne = async(req, res) => {
@@ -57,7 +58,7 @@ exports.findLogo = async(req, res) => {
 };
 
 // Update a record by the id in the request
-exports.update = (req, res) => {
+exports.update = async(req, res) => {
   if (!req.body) {
     return res.status(400).send({
       message: "Data to update can not be empty!",
@@ -66,8 +67,11 @@ exports.update = (req, res) => {
 
   const id = req.params.id;
   //console.log(req.file);
-  if(req.file)
+  var set = await Table.findById(id);
+  if(req.file){
+	  fs.unlinkSync(__basedir+'/uploads/'+set.logo);
   req.body.logo = req.file.filename;
+  }
   Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
     .then((data) => {
 		const logo = req.file ? req.file.filename : data.logo;

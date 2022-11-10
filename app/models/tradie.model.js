@@ -8,6 +8,10 @@ module.exports = (mongoose, mongoosePaginate) => {
       phone: String,
       abn:String,
       photo:String,
+      morgintype:String,
+      uid:String, 
+      property: String,
+      tradie: String,
       cost:String,
 	  columns: [],
       role: {
@@ -24,8 +28,8 @@ module.exports = (mongoose, mongoosePaginate) => {
       liabilitycertificate : String,
       status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Declined', 'Trash'],
-        default: 'Pending'
+        enum: ['Active', 'Approved', 'Declined', 'Trash'],
+        default: 'Active'
       },
       type: {
         type: String,

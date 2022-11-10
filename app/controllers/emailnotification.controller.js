@@ -34,14 +34,14 @@ exports.create = async (req, res) => {
 	if (existdata && existdata.test_publickey === req.body.test_publickey)
 		return res.status(400).send({ message: ms.messages[4].message });
 	else {
-		if (req.body.type === "Template") {
-			console.log(temp);
-			if(temp.message==="Success")
-			req.body.template_id = temp.id;
-			else{
-				return res.status(402).send({ message: temp.message });
-			}
-		}
+		// if (req.body.type === "Template") {
+		// 	console.log(temp);
+		// 	if(temp.message==="Success")
+		// 	req.body.template_id = temp.id;
+		// 	else{
+		// 		return res.status(402).send({ message: temp.message });
+		// 	}
+		// }
 		const newdata = await Table.create(req.body)
 
 		if (!newdata) {
@@ -214,32 +214,30 @@ exports.update = async (req, res) => {
 		return res.status(400).send({ message: ms.messages[4].message });
 	else {
 		
-		if (req.body.type === "Template") {
+		// if (req.body.type === "Template") {
+			
+			
+		// 	//console.log(temp);
+		// 	if(temp==='Success'){
+		// 		const updateData = await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 
-			
-			
-			
-			//console.log(temp);
-			if(temp==='Success'){
-				const updateData = await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-
-				if (!updateData) {
-				res.status(404).send({ message: ms.messages[2].message });
-				}
-				else {
-				//   const tempId = await Table.findByIdAndUpdate(id, {template_id : temp}, { useFindAndModify: false });
-				activity(req.body.name + ' module. ' + ms.messages[1].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
-				res.send({ message: ms.messages[1].message, templateStatus: temp });
-				}
-				}else{
-				res.status(402).send({message:temp});
-			}
-		}
-		else{
+		// 		if (!updateData) {
+		// 		res.status(404).send({ message: ms.messages[2].message });
+		// 		}
+		// 		else {
+		// 		//   const tempId = await Table.findByIdAndUpdate(id, {template_id : temp}, { useFindAndModify: false });
+		// 		activity(req.body.name + ' module. ' + ms.messages[1].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+		// 		res.send({ message: ms.messages[1].message, templateStatus: temp });
+		// 		}
+		// 		}else{
+		// 		res.status(402).send({message:temp});
+		// 	}
+		// }
+		// else{
 			const updateData = await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-			activity(req.body.name + ' module. ' + ms.messages[1].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
-			res.send({ message: ms.messages[1].message, templateStatus: temp });		
-		}
+			// activity(req.body.name + ' module. ' + ms.messages[1].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+			res.send({ message: ms.messages[1].message });		
+		// }
 		// })
 		// .catch((err) => {
 		//   res.status(500).send({ message: ms.messages[2].message });

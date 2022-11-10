@@ -3,6 +3,11 @@ module.exports = (mongoose, mongoosePaginate) => {
     {
 		name: String,
 		rate: String,
+		type: {
+			type: String,
+			enum : ['Inclusive','Exclusive','NoTax'],
+			default: 'Inclusive'
+		}, 
 		status: {
 			type: String,
 			enum : ['Active','Inactive','Trash'],

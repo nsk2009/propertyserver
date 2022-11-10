@@ -25,7 +25,7 @@ module.exports = (mongoose, mongoosePaginate) => {
         },
         notification_type: {
           type: String,
-          enum : ['Customer','Inhouse']
+          enum : ['Customer','Inhouse', 'Tradie']
           },
       status: {
         type: String,

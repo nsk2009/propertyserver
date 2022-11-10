@@ -11,6 +11,9 @@ module.exports = app => {
   router.get("/list", [authJwt.verifyToken], control.findList);
 
   // Retrieve all records
+  router.get("/cuslist/:id", [authJwt.verifyToken], control.findCusList);
+
+  // Retrieve all records
   router.get("/get", control.findStates);
 
   // Create a records

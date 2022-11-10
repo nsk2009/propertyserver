@@ -2,6 +2,12 @@ module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
 		name: String,
+		address: String,
+		startdate: String,
+		quote:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "quotes"
+		},
 		customer:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "customer"
@@ -9,36 +15,37 @@ module.exports = (mongoose, mongoosePaginate) => {
 		tradie:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "tradie"
-		},
+		},		
+        contact: Array,
 		pricing_level: String,
 		site: String,
 		reference: String,
 		doc_theme: String,
 		description: String,
+		uid:String,
 		terms:String,
-		cate1:String,
-		cate2:String,
-		jobcontact:String,
-		jobphone:String,
-		jobmobile:String,
-		sitecontact:String,
-		sitephone:String,
-		sitemobile:String,
-		custom1:String,
-		custom2:String,
-		custom3:String,
+		contact: Array,
+		subtotal: String,
+		grosstotal: String,
+		discamt: String,
+		taxamt: String,
+		total: String,
+		discount: String,
+		distype: String,
+		taxrate: String,
+		taxtype: String,
+		taxid:{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "taxes"
+		},
+		taxname: String,
+		tax: String,
 		items: Array,
 		status: {
 			type: String,
 			enum : ['Active','Inactive','Trash'],
 			default: 'Active'
-		}, 
-		tax: {
-			type: String,
-			enum : ['Inclusive','Exclusive','No_tax'],
-			default: 'Exclusive'
-		},
-	
+		}, 	
 		createdBy: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "adminuser"

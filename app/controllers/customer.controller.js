@@ -1,9 +1,15 @@
 const db = require("../models");
 const Table = db.customer;
 const Admin = db.adminusers;
+const Setting = db.settings;
+const Job = db.jobs;
+const Quote = db.quotes;
+const Invoice = db.invoices;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 const excel = require("exceljs");
+var sprintf = require('sprintf-js').sprintf;
+const settings_id = '6275f6aae272a53cd6908c8d';
 
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
@@ -16,6 +22,8 @@ const getPagination = (page, size) => {
 // Create and Save a new record
 exports.create = async(req, res) => {
 	var ms = await msg('Customer');
+	var set = await Setting.findById(settings_id).then();
+	var Autoid = sprintf('%01d', set.customer);
 	if (!req.body.firstname && !req.body.email)    
 	  return res.status(400).send({ message: ms.messages[0].message });
 		req.body.phone = req.body.phone;
@@ -29,14 +37,15 @@ exports.create = async(req, res) => {
 		  else if (data && data.phone === phone)
 			  return res.status(400).send({ message: ms.messages[2].message });
 		  else{		
-  
+			req.body.uid= "CID"+Autoid;  
 			  Table.create(req.body)
 			  .then(async(data) => { 
 				if (!data) {
 				  res.status(404).send({ message: ms.messages[3].message});
 				} else {
 			activity(`${req.body.firstname} Customer created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
-			res.send({ message: ms.messages[5].message });
+			await Setting.findByIdAndUpdate(settings_id, { customer: set.customer + 1 }, { useFindAndModify: false });
+			res.send({ message: ms.messages[5].message, id:data._id });
 		}
 			  })
 			  .catch((err) => {
@@ -91,7 +100,7 @@ exports.findOne = async(req, res) => {
 	const ip = req.headers['x-forwarded-for'];
 	Table.findById(id)
 	  .populate('createdBy')
-	  .populate('updatedBy')
+	  .populate('modifiedBy')
 	  .then((data) => {
 		if (!data)
 		  res.status(404).send({ message: ms.messages[3].message });
@@ -100,6 +109,17 @@ exports.findOne = async(req, res) => {
 	  .catch((err) => {
 		res.status(500).send({ message: ms.messages[3].message });
 	  });
+  };
+
+// Find a single record with an id
+exports.details = async(req, res) => {
+	const id = req.params.id;
+	const ip = req.headers['x-forwarded-for'];
+	const data = await Table.findById(id).populate('createdBy').populate('modifiedBy');	
+	const jobs = await Job.find({customer: id}).populate('tradie');  
+	const quotes = await Quote.find({customer: id}); 
+	const invoices = await Invoice.find({customer: id}); 
+	res.send({data:data, jobs: jobs, quotes: quotes, invoices: invoices});
   };
 
   // Find a single record with an id

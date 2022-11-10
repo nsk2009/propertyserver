@@ -1,32 +1,38 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
-		name: String,
 		customer:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "customer"
 		},
-		pricing_level: String,
-		site: String,
-		quote_date: String,
-		expiry_date: String,
-		reference: String,
-		doc_theme: String,
-		description: String,
+		job:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "jobs"
+		},
+		uid:String,
 		terms:String,
-		notes:Array,
+		contact: Array,
+		subtotal: String,
+		grosstotal: String,
+		discamt: String,
+		taxamt: String,
+		total: String,
+		discount: String,
+		distype: String,
+		taxrate: String,
+		taxtype: String,
+		taxid:{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "taxes"
+		},
+		taxname: String,
+		tax: String,
 		items: Array,
 		status: {
 			type: String,
 			enum : ['Active','Inactive','Trash'],
 			default: 'Active'
-		}, 
-		tax: {
-			type: String,
-			enum : ['Inclusive','Exclusive','No_tax'],
-			default: 'Exclusive'
-		},
-	
+		}, 	
 		createdBy: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "adminuser"

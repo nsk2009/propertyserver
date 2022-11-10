@@ -1,11 +1,33 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
+      title:String,
       name:String,
+      company:String, 
       email: String,
+      uid:String,
       phone: String,
-      address : String,
+      address : Array,
+      lat: String,
+      lng: String,
+      jobaddress : Array,
+      joblat: String,
+      joblng: String,
       description : String,
+      customer:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "customer"
+      },
+      quote: {
+        type: String,
+        enum: ['yes', 'no'],
+        default: 'no'
+      },
+      sameaddress: {
+        type: String,
+        enum: ['yes', 'no'],
+        default: 'no'
+      },
       photo: String,
       status: {
         type: String,

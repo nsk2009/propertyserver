@@ -29,6 +29,9 @@ module.exports = app => {
   router.get("/restore/:id", [authJwt.verifyToken], control.restore);
 
   // trash a records
+  router.get("/invoice/:id", [authJwt.verifyToken], control.makeinvoice);
+
+  // trash a records
   router.get("/trash/:id", [authJwt.verifyToken], control.trash);
 
   // Retrieve all history record with a id

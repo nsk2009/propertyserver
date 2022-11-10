@@ -37,5 +37,6 @@ db.connections = require("./connections.model.js")(mongoose, mongoosePaginate);
 db.docthemes = require("./docthemes.model.js")(mongoose, mongoosePaginate);
 db.tradie = require("./tradie.model.js")(mongoose, mongoosePaginate);
 db.accountingapis = require("./accountingapi.model.js")(mongoose, mongoosePaginate);
+db.inbox = require("./inbox.model.js")(mongoose, mongoosePaginate);
 
 module.exports = db;

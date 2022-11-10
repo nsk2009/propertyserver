@@ -107,7 +107,6 @@ exports.update = async(req, res) => {
 		if (data && data.name === req.body.name) 
 			return res.status(400).send({ message: "Message module already exist" });
 		else{
-			console.log(req.body);
 		  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 			.then((data) => {
 			  if (!data) {	
