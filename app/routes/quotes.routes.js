@@ -28,6 +28,9 @@ module.exports = app => {
   // update a records
   router.post("/:id", [authJwt.verifyToken], control.update);
 
+  // revise a records
+  router.post("/revise/:id", [authJwt.verifyToken], control.revise);
+
   // trash a records
   router.get("/restore/:id", [authJwt.verifyToken], control.restore);
 

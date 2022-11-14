@@ -25,11 +25,14 @@ module.exports = app => {
   // update a records
   router.post("/:id", [authJwt.verifyToken], control.update);
 
-  // trash a records
+  // restore a records
   router.get("/restore/:id", [authJwt.verifyToken], control.restore);
 
-  // trash a records
+  // invoice a records
   router.get("/invoice/:id", [authJwt.verifyToken], control.makeinvoice);
+
+  // quote a records
+  router.get("/quote/:id", [authJwt.verifyToken], control.quote);
 
   // trash a records
   router.get("/trash/:id", [authJwt.verifyToken], control.trash);

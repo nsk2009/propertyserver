@@ -2,6 +2,8 @@ const db = require("../models");
 const Table = db.jobs;
 const Invoice = db.invoices;
 const Admin = db.adminusers;
+const Quote = db.quotes;
+const Enquiry = db.enquiry;
 const Setting = db.settings;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
@@ -36,9 +38,9 @@ exports.create = async(req, res) => {
 			  if (!data1) {
 				res.status(404).send({ message: ms.messages[0].message});
 			  } else {
-          activity(req.body.name+' module. '+ms.messages[3].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+          activity(req.body.name+' module. '+ms.messages[2].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
 		  await Setting.findByIdAndUpdate(settings_id, { job: set.job + 1 }, { useFindAndModify: false }); 
-          res.send({ message: ms.messages[3].message });
+          res.send({ message: ms.messages[2].message });
       }
 			})
 			.catch((err) => {
@@ -181,6 +183,8 @@ exports.findOne = async(req, res) => {
     .populate('createdBy')
     .populate('modifiedBy')
     .populate('customer')
+    .populate('quote')
+    .populate('tradie')
     .then((data) => {
       if (!data)
       res.status(404).send({ message: "OK"});
@@ -190,7 +194,6 @@ exports.findOne = async(req, res) => {
       res.status(500).send({ message: "Invalid quote id"});
     });
 };
-
 
 // Find a single record with an id
 exports.makeinvoice = async(req, res) => {
@@ -202,6 +205,8 @@ exports.makeinvoice = async(req, res) => {
   info.uid = "INV" + Autoid;
   info.job = id;
   info.customer = data.customer;
+  info.quote = data.quote;
+  info.tradie = data.tradie;
   info.items = data.items;
   info.subtotal = data.subtotal;
   info.grosstotal = data.grosstotal;
@@ -221,10 +226,23 @@ exports.makeinvoice = async(req, res) => {
   res.send({ message: "Job has beeen successfully convert as invoice", id: inv.id});
 };
 
+// Find a single record with an id
+exports.quote = async(req, res) => {
+  const id = req.params.id;
+  var data = await Enquiry.findById(id);
+  if(data){ 
+	res.send({type: '1', quote:0, customer: data.customer, address: data.address, description: data.description, items: []});
+  }
+  else{
+	data = await Quote.findById(id);
+	res.send({type: '0', quote: data.id, customer: data.customer, address: '', description: data.description, items: data.items, tax: data.tax, discount: data.discount, distype: data.distype});
+  }
+};
+
 
 // Update a record by the id in the request
 exports.update = async(req, res) => {
-  var ms = await msg('states');
+  var ms = await msg('jobs');
   if (!req.body)
     return res.status(400).send({ message: ms.messages[0].message});
   const id = req.params.id;
@@ -241,8 +259,8 @@ exports.update = async(req, res) => {
 				res.status(404).send({ message: ms.messages[0].message + err});
 			  }
 			  else {
-				activity(ms.messages[4].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
-				  res.send({ message: ms.messages[4].message });
+				activity(ms.messages[3].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+				  res.send({ message: ms.messages[3].message });
 			  }
 			})
 			.catch((err) => {
@@ -256,7 +274,7 @@ exports.update = async(req, res) => {
 };
 
 exports.trash = async(req, res) => {
-	var ms = await msg('states');
+	var ms = await msg('jobs');
 	const id = req.params.id;
 
 	Table.findById(id)
@@ -285,7 +303,7 @@ exports.trash = async(req, res) => {
 };
 
 exports.restore = async(req, res) => {
-  var ms = await msg('states');
+  var ms = await msg('jobs');
 	const id = req.params.id;
 
 	Table.findById(id)

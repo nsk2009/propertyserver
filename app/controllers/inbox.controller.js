@@ -4,6 +4,8 @@ const Settings = db.settings;
 const EmailApi = db.emailapi;
 const Table = db.inbox;
 const Imap = require('imap');
+var fs = require('fs');
+var {Base64Decode} = require('base64-stream');
 const msg = require("../middleware/message");
 
 const getPagination = (page, size) => {
@@ -19,142 +21,238 @@ const emailapi_id = '628f4d007abca8d1c3471a17';
 
 // Retrieve all records from the database.
 exports.syncMails = async (req, res) => {
-    // console.log('bug found')
-    var emailapis= await EmailApi.findById(emailapi_id);
-  var set = await Settings.findById(set_id);
-  var email =  emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username;
-  const imap = new Imap({
-    user: emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username,
+   // console.log('bug found')
+	var emailapis= await EmailApi.findById(emailapi_id);
+	var set = await Settings.findById(set_id);
+	var email =  emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username;
+	const imap = new Imap({
+		user: emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username,
 		password: emailapis.gmail_type==='Live' ? emailapis.live_gmail_password : emailapis.sand_gmail_password,
-    host: 'imap.gmail.com',
-    port: 993,
-    tls: true,
-    tlsOptions: {
-      rejectUnauthorized: false
-    },
-    authTimeout: 3000
-  });
+		host: 'imap.gmail.com',
+		port: 993,
+		tls: true,
+		tlsOptions: {
+			rejectUnauthorized: false
+		},
+		authTimeout: 3000
+	});
   
-// var dt= [];
+	// var dt= [];
 
-  function openInbox(cb) {
-    imap.openBox('INBOX', true, cb);
-  }
-  //['SUBJECT', 'Give Subject Here']]
-  imap.once('ready', function() {
-    var fs = require('fs'), fileStream;
-    openInbox(async(err, box) =>{
-      if (err) throw err;
-      // imap.search([ 'UNSEEN', ['SINCE', 'Sep 20, 2022'] ], function(err, results) {
-      //   if (err) throw err; 
-      // var f = imap.fetch(results, { bodies: '' });
-      var f = imap.seq.fetch(set.inbox_count+1 + ':*', { bodies: '' });
-    f.on('message', async(msg, seqno)=> {
-          console.log('Message #%d', seqno);
-          var prefix = '(#' + seqno + ') ';
-          msg.on('body', async(stream, info)=> {
-            simpleParser(stream, async(err, mail) => {
-              console.log(mail.subject, 'subject');        
-              var data = {};
-              data.subject= mail.subject;
-              data.email= email;
-              data.from= mail.from ? mail.from.text : '';
-              data.date= mail.date;
-              // data.to= mail.to ? mail.to.text : '';
-              data.html= mail.html;
-              data.text= mail.text;
-              data.uid= seqno;
-              var exist = await Table.findOne({uid:seqno, email:email}).then((res)=>{return res;}).catch((e)=>{return '';});
-              if(!exist)
-              await Table.create(data);        
-            });
-            await Settings.findByIdAndUpdate(set_id, {inbox_count : seqno}, {useFindAndModify:false});
-          });
-          msg.once('attributes', function(attrs) {
-            console.log(prefix + 'Attributes: %s', inspect(attrs, false, 8));
-          });
-          msg.once('end', function() {
-            console.log(prefix + 'Finished');            
-          });
-          
-          // simpleParser(stream, async (err, parsed) => {
-          //   const {from, subject, textAsHtml, text, attachments} = parsed;
-          //   res.send({from: from, subject:subject, html: textAsHtml});
-          // });
-        });
-        f.once('error', function(err) {
-          console.log('Fetch error: ' + err);
-        });
-        f.once('end', function() {
-          console.log('Done fetching all messages!');
-          imap.end();
-        });
-      });
-    // });
-  });
-  
-  imap.once('error', function(err) {
-    console.log(err);
-  });
-  
-  imap.once('end', function() {
-    console.log('Connection ended');
-  });
-  
-  imap.connect();
-//   res.send(dt);
+	function openInbox(cb) {
+		imap.openBox('INBOX', true, cb);
+	}
+	function toUpper(thing) { return thing && thing.toUpperCase ? thing.toUpperCase() : thing;}
 
-// var imaps = require('imap-simple');
-// const simpleParser = require('mailparser').simpleParser;
-// const _ = require('lodash');
+	function findAttachmentParts(struct, attachments) {
+		attachments = attachments ||  [];
+		for (var i = 0, len = struct.length, r; i < len; ++i) {
+			if (Array.isArray(struct[i])) {
+				findAttachmentParts(struct[i], attachments);
+			} else {
+				if (struct[i].disposition && ['INLINE', 'ATTACHMENT'].indexOf(toUpper(struct[i].disposition.type)) > -1) {
+					attachments.push(struct[i]);
+				}
+			}
+		}
+		return attachments;
+	}
+	//['SUBJECT', 'Give Subject Here']]
+	imap.once('ready', function() {
+		var fs = require('fs'), fileStream;
+		openInbox(async(err, box) =>{
+			if (err) throw err;
+			// imap.search([ 'UNSEEN', ['SINCE', 'Sep 20, 2022'] ], function(err, results) {
+			//   if (err) throw err; 
+			// var f = imap.fetch(results, { bodies: '' });
+			var f = imap.seq.fetch(set.inbox_count + ':*', { bodies: '', struct: true });
+			f.on('message', async(msg, seqno)=> {
+				//console.log('Message #%d', seqno);
+				var prefix = '(#' + seqno + ') ';
+				msg.on('body', async(stream, info)=> {
+					simpleParser(stream, async(err, mail) => {
+						//console.log(mail.subject, 'subject');        
+						var data = {};
+						data.subject= mail.subject;
+						data.email= email;
+						data.from= mail.from ? mail.from.text : '';
+						data.date= mail.date;
+						data.html= mail.html;
+						data.text= mail.text;
+						data.uid= seqno;
+						var exist = await Table.findOne({uid:seqno});
+						if(!exist)
+							await Table.create(data);
+						else	
+							await Table.updateOne({uid:seqno}, data, {useFindAndModify:false});	  
+					});
+					await Settings.findByIdAndUpdate(set_id, {inbox_count : parseInt(seqno)+1}, {useFindAndModify:false});
+				});
+				msg.once('attributes', async function(attrs) {
+					var attachments = findAttachmentParts(attrs.struct);
+					var data = {};
+					data.attachment = attachments;
+					data.uid= seqno;
+					var exist = await Table.findOne({uid:seqno});
+					if(!exist)
+						await Table.create(data);
+				});
+				msg.once('end', function() {
+					//console.log(prefix + 'Finished');
+				});
+			});
+			f.once('error', function(err) {
+				//console.log('Fetch error: ' + err);
+			});
+			f.once('end', function() {
+				//console.log('Done fetching all messages!');
+				imap.end();
+			});
+		});
+		// });
+	});
+  
+	imap.once('error', function(err) {
+		//console.log(err);
+	});
 
-// var config = {
-//     imap: {
-// 		user: emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username,
-// 		password: emailapis.gmail_type==='Live' ? emailapis.live_gmail_password : emailapis.sand_gmail_password,
-// 		host: 'imap.gmail.com',
-// 		port: 993,
-// 		tls: true,
-// 		tlsOptions: {
-// 		  rejectUnauthorized: false
-// 		},
-//         authTimeout: 3000
-//     }
-// };
-// imaps.connect(config).then(function (connection) {
-//     return connection.openBox('INBOX').then(function () {
-//         var searchCriteria = [(set.inbox_count+1)+':*'];
-//         // console.log(searchCriteria);
-//         var fetchOptions = {
-//             bodies: ['HEADER', 'TEXT', ''],
-//         };
-//         return connection.search(searchCriteria, fetchOptions).then(function (messages) {
-//             messages.forEach(async(item)=> {
-//                 var all = _.find(item.parts, { "which": "" })
-//                 var id = item.attributes.uid;
-//                 var idHeader = "Imap-Id: "+id+"\r\n";
-//                 console.log(id, 'id');
-//                 simpleParser(idHeader+all.body, async(err, mail) => {
-//                     // access to the whole mail object
-//                     // console.log(mail, 'mail');                    
-//                     var data = {};
-//                     data.subject= mail.subject;
-//                     data.from= mail.from.text;
-//                     data.date= mail.date;
-//                     data.to= mail.to.text;
-//                     data.html= mail.html;
-//                     data.text= mail.text;
-//                     data.uid= id;
-//                     var exist = await Table.findOne({uid:id}).then((res)=>{return res;}).catch((e)=>{return '';});
-//                     if(!exist)
-//                     await Table.create(data);
-//                 });
-//                 await Settings.findByIdAndUpdate(set_id, {inbox_count : id}, {useFindAndModify:false});
-//             });
-//         });
-//     });
-// });
-res.send('Mails sync succeed!')
+	imap.once('end', function() {
+		//console.log('Connection ended');
+	});
+
+	imap.connect();
+	res.send('Mails sync succeed!')
+};
+
+
+// Retrieve all records from the database.
+exports.download = async (req, res) => {	
+    const id = req.params.id;
+    const pos = req.params.pos;
+	var data = await Table.findById(id);
+	if(data.attachment && data.attachment[pos] && !data.attachment[pos].download){	
+		data.attachment[pos]['download'] = 'yes';
+		await Table.findByIdAndUpdate(id, data, {useFindAndModify:false})
+		var emailapis= await EmailApi.findById(emailapi_id);
+		var set = await Settings.findById(set_id);
+		var email =  emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username;
+		const imap = new Imap({
+			user: emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username,
+			password: emailapis.gmail_type==='Live' ? emailapis.live_gmail_password : emailapis.sand_gmail_password,
+			host: 'imap.gmail.com',
+			port: 993,
+			tls: true,
+			tlsOptions: {
+				rejectUnauthorized: false
+			},
+			authTimeout: 3000
+		});
+	  
+		// var dt= [];
+
+		function openInbox(cb) {
+			imap.openBox('INBOX', true, cb);
+		}
+		function toUpper(thing) { return thing && thing.toUpperCase ? thing.toUpperCase() : thing;}
+
+		function findAttachmentParts(struct, attachments) {
+			attachments = attachments ||  [];
+			for (var i = 0, len = struct.length, r; i < len; ++i) {
+				if (Array.isArray(struct[i])) {
+					findAttachmentParts(struct[i], attachments);
+				} else {
+					if (struct[i].disposition && ['INLINE', 'ATTACHMENT'].indexOf(toUpper(struct[i].disposition.type)) > -1) {
+						attachments.push(struct[i]);
+					}
+				}
+			}
+			return attachments;
+		}
+		
+		function buildAttMessageFunction(attachment) {
+			var filename = attachment.params.name;
+			var encoding = attachment.encoding;
+
+			return function (msg, seqno) {
+				var prefix = '(#' + seqno + ') ';
+				msg.on('body', function(stream, info) {
+					//Create a write stream so that we can stream the attachment to file;
+					console.log(prefix + 'Streaming this attachment to file', filename, info);
+					var writeStream = fs.createWriteStream('./inbox/'+filename);
+					writeStream.on('finish', function() {
+						//console.log(prefix + 'Done writing to file %s', filename);
+					});
+
+					//stream.pipe(writeStream); this would write base64 data to the file.
+					//so we decode during streaming using 
+
+					if (toUpper(encoding) === 'BASE64') {
+						//the stream is base64 encoded, so here the stream is decode on the fly and piped to the write stream (file)
+						stream.pipe(new Base64Decode()).pipe(writeStream);
+					} else  {
+						//here we have none or some other decoding streamed directly to the file which renders it useless probably
+						stream.pipe(writeStream);
+					}
+				});
+				msg.once('end', function() {
+					console.log(prefix + 'Finished attachment %s', filename);
+				});
+			};
+		}
+		//['SUBJECT', 'Give Subject Here']]
+		imap.once('ready', function() {
+			var fs = require('fs'), fileStream;
+			openInbox(async(err, box) =>{
+				if (err) throw err;
+				// imap.search([ 'UNSEEN', ['SINCE', 'Sep 20, 2022'] ], function(err, results) {
+				//   if (err) throw err; 
+				// var f = imap.fetch(results, { bodies: '' });
+				var f = imap.seq.fetch(data.uid +':'+data.uid, { bodies: '', struct: true });
+				f.on('message', async(msg, seqno)=> {
+					//console.log('Message #%d', seqno);
+					var prefix = '(#' + seqno + ') ';
+					msg.on('body', async(stream, info)=> {
+					});
+					msg.once('attributes', async function(attrs) {
+						var attachments = findAttachmentParts(attrs.struct);
+						for (const attachment of attachments) {
+						  var f = imap.fetch(attrs.uid , { //do not use imap.seq.fetch here
+							bodies: [attachment.partID],
+							struct: true 
+						  });
+						  //build function to process attachment message
+						  //if(attachment.params.name === data.attachment[pos].params.name)
+						  f.on('message', buildAttMessageFunction(attachment));
+						}
+					});
+					msg.once('end', function() {
+						//console.log(prefix + 'Finished');
+					});
+				});
+				f.once('error', function(err) {
+					//console.log('Fetch error: ' + err);
+				});
+				f.once('end', function() {
+					//console.log('Done fetching all messages!');
+					imap.end();
+				});
+			});
+			// });
+		});
+	  
+		imap.once('error', function(err) {
+			//console.log(err);
+		});
+
+		imap.once('end', function() {
+			console.log('Connection ended');
+			res.send('download new succeed!')
+		});
+
+		imap.connect();
+	}
+	else	
+	res.send('download succeed!')
 };
 
 // Retrieve all records from the database.

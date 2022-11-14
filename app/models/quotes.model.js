@@ -29,6 +29,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 		taxname: String,
 		tax: String,
 		terms:String,
+		history:Array,
 		notes:Array,
 		uid:String,
 		items: Array,

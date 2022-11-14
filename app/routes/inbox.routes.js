@@ -12,6 +12,9 @@ module.exports = app => {
   
   // mark as read
   router.get("/setread/:id", control.setRead);
+  
+  // mark as read
+  router.get("/download/:id/:pos", control.download);
 
   // Retrieve single record
   router.get("/:id", control.findOne);

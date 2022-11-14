@@ -335,6 +335,15 @@ app.get('/template/:file(*)', (req, res) => {
     res.sendFile(`${fileLocation}`)
 });
 
+app.get('/inbox/:file(*)', (req, res) => {
+    let file = req.params.file;
+    //console.log(file);
+    if(file === 'undefined' || file === '')
+      file = 'no-image.jpg';
+    let fileLocation = __basedir+'/inbox/'+file;
+    res.sendFile(`${fileLocation}`)
+});
+
 global.cmsLink = '';
 global.templateLink = '';
 global.providerLink = '';

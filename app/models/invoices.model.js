@@ -1,9 +1,17 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
+		quote:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "quotes"
+		},
 		customer:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "customer"
+		},
+		tradie:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "tradie"
 		},
 		job:  {
 			type: mongoose.Schema.Types.ObjectId,
@@ -21,6 +29,8 @@ module.exports = (mongoose, mongoosePaginate) => {
 		distype: String,
 		taxrate: String,
 		taxtype: String,
+		expiry_date: String,
+		terms: String,
 		taxid:{
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "taxes"
@@ -28,6 +38,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 		taxname: String,
 		tax: String,
 		items: Array,
+		description: String,
 		status: {
 			type: String,
 			enum : ['Active','Inactive','Trash'],

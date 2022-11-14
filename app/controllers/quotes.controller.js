@@ -33,6 +33,7 @@ exports.create = async(req, res) => {
 // 		else{
 			req.body.uid="QT" + Autoid;
 			// return res.status(400).send(req.body);
+			req.body.history = [];
 			await Table.create(req.body)
 			.then(async(data) => {
 			  if (!data) {
@@ -215,10 +216,70 @@ exports.update = async(req, res) => {
 	// });
 };
 
+
+// Revise a record by the id in the request
+exports.revise = async(req, res) => {
+  var ms = await msg('quotes');
+  if (!req.body)
+    return res.status(400).send({ message: ms.messages[3].message});
+  const id = req.params.id;
+//   req.body.quote_date=req.body.quote_date.toJSON().slice(0, 10).replace(/-/g, '-');
+//   req.body.expiry_date=req.body.expiry_date.toJSON().slice(0, 10).replace(/-/g, '-');
+
+//   Table.findOne({ $or: [{ name: req.body.name}], _id: { $ne : id}})
+//     .then((data) => {
+// 		if (data && data.name === req.body.name)
+// 			return res.status(400).send({ message: ms.messages[1].message });
+
+// 		else{
+	      var revise = await Table.findOne({_id: id});
+		  let history = revise.history;
+		  let info ={			  
+			taxtype: revise.taxtype,
+			taxrate: revise.taxrate,
+			taxid: revise.taxid,
+			taxname: revise.taxname,
+			subtotal: revise.subtotal,
+			grosstotal: revise.grosstotal,
+			discamt: revise.discamt,
+			taxamt: revise.taxamt,
+			total: revise.total,
+			customer: revise.customer,
+			tradie: revise.tradie,
+			quote_date: revise.quote_date,
+			expiry_date: revise.expiry_date,
+			description: revise.description,
+			terms: revise.terms,
+			discount: revise.discount,
+			distype: revise.distype,
+			tax: revise.tax
+		  } 
+		  history.push(info);
+		  req.body.history = history;
+		  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+			.then((data) => {
+			  if (!data) {
+				res.status(404).send({ message: ms.messages[3].message + err});
+			  }
+			  else {
+				activity(ms.messages[2].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+				  res.send({ message: ms.messages[2].message });
+			  }
+			})
+			.catch((err) => {
+				res.status(500).send({ message: ms.messages[3].message + err});
+			});
+		// }
+    //   })
+	//   .catch((err) => {
+    //   res.status(500).send({ message: ms.messages[0].message + err});
+	// });
+};
+
 exports.trash = async(req, res) => {
 	var ms = await msg('states');
 	const id = req.params.id;
-
+ 
 	Table.findById(id)
 	  .then((data) => {
 		if (!data)

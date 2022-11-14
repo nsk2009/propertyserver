@@ -6,8 +6,9 @@ module.exports = (mongoose, mongoosePaginate) => {
 		date: Date,
 		subject: String,
 		html: String,
-    text:String,
+		text:String,
 		to: String,
+		attachment: Array,
     uid:Number,
     viewstatus:{
       type:String,
