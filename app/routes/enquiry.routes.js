@@ -21,6 +21,9 @@ const { authJwt } = require("../middleware");
   // Retrieve all published records
   router.get("/exceldoc", [authJwt.verifyToken], control.exceldoc);
 
+    // send enquiry request to tradie with id
+    router.post("/sendenquiry/:id", [authJwt.verifyToken], control.sendEnquiry);
+
   // Update a record status with id
   router.get("/trash/:id", [authJwt.verifyToken], control.trash);
 

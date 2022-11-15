@@ -10,6 +10,7 @@ module.exports = app => {
   // Retrieve all records
   router.get("/list", [authJwt.verifyToken], control.findList);
 
+
   // Retrieve all records
   router.get("/cuslist/:id", [authJwt.verifyToken], control.findCusList);
 

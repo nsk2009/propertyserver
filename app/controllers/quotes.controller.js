@@ -252,7 +252,10 @@ exports.revise = async(req, res) => {
 			terms: revise.terms,
 			discount: revise.discount,
 			distype: revise.distype,
-			tax: revise.tax
+			tax: revise.tax,
+			items: revise.items,
+			modifiedBy: revise.modifiedBy,
+			updatedAt: revise.updatedAt
 		  } 
 		  history.push(info);
 		  req.body.history = history;

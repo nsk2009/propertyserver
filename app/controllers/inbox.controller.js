@@ -118,15 +118,15 @@ exports.syncMails = async (req, res) => {
 
 	imap.once('end', function() {
 		//console.log('Connection ended');
+		res.send('Mails sync succeed!')
 	});
 
 	imap.connect();
-	res.send('Mails sync succeed!')
 };
 
 
 // Retrieve all records from the database.
-exports.download = async (req, res) => {	
+exports.download = async (req, res) => {
     const id = req.params.id;
     const pos = req.params.pos;
 	var data = await Table.findById(id);

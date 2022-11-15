@@ -8,6 +8,8 @@ module.exports = (mongoose, mongoosePaginate) => {
       uid:String,
       phone: String,
       address : Array,
+      tradie : Array,
+      tradie_label : Array,
       lat: String,
       lng: String,
       jobaddress : Array,

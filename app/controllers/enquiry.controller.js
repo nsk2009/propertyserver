@@ -348,3 +348,10 @@ exports.exceldoc = async(req, res) => {
       res.status(500).send({ message: ms.messages[8].message});
     });
 };
+
+exports.sendEnquiry = async (req, res) => {
+	const id = req.params.id;
+	const enquiry = await Table.findById(id).populate({ path: 'createdBy', select: ['firstname', 'lastname'] }).populate({ path: 'modifiedBy', select: ['firstname', 'lastname'] });
+		
+	res.send(enquiry);
+}

@@ -2,6 +2,7 @@ const db = require("../models");
 const Table = db.tradie;
 const Setting = db.settings;
 const Admin = db.adminusers;
+const Columns = db.columns;
 const Job = db.jobs;
 const Quote = db.quotes;
 const msg = require("../middleware/message");
@@ -10,6 +11,8 @@ const excel = require("exceljs");
 var fs = require('fs');
 var sprintf = require('sprintf-js').sprintf;
 const settings_id = '6275f6aae272a53cd6908c8d';
+const email = require("../middleware/email");
+var bcrypt = require("bcryptjs");
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
   const offset = page ? page * limit : 0;
@@ -40,9 +43,17 @@ exports.create = async(req, res) => {
   				req.body.businesscertificate = req.files.bcertificate[0].filename;
 			if(req.files.lcertificate)
   				req.body.liabilitycertificate = req.files.lcertificate[0].filename;	
+			const info = {};
+			Columns.find({type: 'Tradie'}, { name: 1, columns: 1 }).then(async(cursor) => {
+				//console.log(cursor);
+			  cursor.forEach(function(doc, err) {
+				  info[doc.name] = doc.columns;
+			  });
+			  req.body.columns = info;
 				req.body.property = set.property;
 				req.body.tradie = set.tradie;
 				req.body.uid =  'TRD' + Autoid;
+				req.body.role='6331845dd7919d3e64b0902d';
 			  Table.create(req.body)
 			  .then(async(data) => { 
 				if (!data) {
@@ -51,11 +62,13 @@ exports.create = async(req, res) => {
 			activity(`${req.body.name} Tradie created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
 			await Setting.findByIdAndUpdate(settings_id, { tradies: set.tradies + 1 }, { useFindAndModify: false });
 			res.send({ message: ms.messages[5].message, id: data._id });
+			
 		}
 			  })
 			  .catch((err) => {
 				res.status(500).send({ message: ms.messages[4].message });
 			  });
+			});
 	  }
 	}).catch((err) => {
 	  res.status(500).send({ message: ms.messages[4].message });
@@ -451,3 +464,56 @@ exports.findAllHistory = async (req, res) => {
 		quotes: quotes,
 	  });
 }
+
+exports.sendKey = async(req, res, next) => {
+	var ms = await msg('login');
+	const id = req.params.id;
+	Table.findById(id)
+	  .then(async(data) => {
+		  if (!data)
+			  return res.status(400).send({ message: ms.messages[0].message });
+		  else{
+		await email('6373770854d8e5dda7f9e13f', 'admin', {'{name}': data.name +' '+ data.companyname, '{email}': data.email, '{link}': `${customerLink}register/${data.id}`});  
+				  return res.status(200).send({message: 'Activation link send to particular mail address', email:data.email});
+		}
+		})
+		.catch((err) => {
+		  res.status(500).send({ message: "Error retrieving record" });		  
+	  });
+  };
+  
+  
+// Create Password a record by the id in the request
+exports.createpassword = (req, res) => {
+	if (!req.body)
+	  return res.status(400).send({ message: "Data to update can not be empty!" });
+	const id = req.params.id;
+	Table.findById(id)
+	  .then((data) => {
+		const saltRounds = 10;
+		const myPlaintextPassword = req.body.password;
+  
+		bcrypt.genSalt(saltRounds, function (err, salt) {
+		  bcrypt.hash(myPlaintextPassword, salt, function (err, hash) {
+			Table.findByIdAndUpdate(id, { password: hash, status: 'Active' }, { useFindAndModify: false })
+			  .then(async(data) => {
+  
+				if (!data) {
+				  res.status(404).send({ message: err });
+				}
+				else {
+				 // await email('629489cbfabff6261014f1fc', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${cmsLink}`});  
+				//   activity('update#' + data.name + ' User password has been created successfully', req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.password);
+				  res.send({ message: "User password has been created successfully" });
+				}
+			  })
+			  .catch((err) => {
+				res.status(500).send({ message: err + id });
+			  });
+		  });
+		});
+	  })
+	  .catch((err) => {
+		res.status(500).send({ message: "Error retrieving record with id=" + id });
+	  });
+  };

@@ -51,6 +51,12 @@ module.exports = app => {
 
   // Delete more than one record
   router.delete("/", [authJwt.verifyToken], control.deleteAll);
+  
+  // Change Login with id
+  router.get("/sendkey/:id", [authJwt.verifyToken], control.sendKey);
+
+  // Create Password
+  router.post("/createpassword/:id", control.createpassword);
 
   // Headers aasign
   app.use(function(req, res, next) {

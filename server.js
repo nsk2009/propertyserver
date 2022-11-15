@@ -346,7 +346,7 @@ app.get('/inbox/:file(*)', (req, res) => {
 
 global.cmsLink = '';
 global.templateLink = '';
-global.providerLink = '';
+global.tradieLink = '';
 global.customerLink = '';
 
 
@@ -398,7 +398,7 @@ const general = db.settings;
   .then((set)=>{
     global.cmsLink = set.cmsLink;
     global.templateLink = set.templateLink;
-    global.providerLink = set.customerLink;
+    global.tradieLink = set.tradieLink;
     global.customerLink = set.customerLink;
   })
   .catch((e)=>{
