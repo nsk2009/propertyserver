@@ -46,6 +46,7 @@ exports.create = (req, res) => {
 					  });
 					}					
 				  });
+				  //res.send({ id: data.id, message: "Record was updated successfully." });
 				  res.send({ message: "Record was updated successfully." });
 			  }
 			})

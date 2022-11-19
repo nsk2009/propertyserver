@@ -24,6 +24,9 @@ const { authJwt } = require("../middleware");
     // send enquiry request to tradie with id
     router.post("/sendenquiry/:id", [authJwt.verifyToken], control.sendEnquiry);
 
+      // Resend enquiry request to tradie with id
+      router.get("/resendenquiry", [authJwt.verifyToken], control.resendEnquiry);
+
   // Update a record status with id
   router.get("/trash/:id", [authJwt.verifyToken], control.trash);
 
@@ -32,6 +35,9 @@ const { authJwt } = require("../middleware");
 
   // Retrieve a single record with id
   router.get("/:id", [authJwt.verifyToken], control.findOne);
+
+   // Retrieve a single record with id
+   router.get("/history/:id", [authJwt.verifyToken], control.findHistory);
 
   // Change Login with id
   router.get("/activity/:id", control.activity);

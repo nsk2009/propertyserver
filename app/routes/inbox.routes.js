@@ -7,6 +7,9 @@ module.exports = app => {
   // Sync all records to Db
   router.get("/syncmails", control.syncMails);
 
+  // Update selected records
+  router.get("/updateall", [authJwt.verifyToken], control.updateAll);
+
   // Retrieve all records
   router.get("/", control.findAll);
   

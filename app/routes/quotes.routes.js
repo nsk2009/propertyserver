@@ -9,7 +9,9 @@ module.exports = app => {
 
   // Retrieve all records
   router.get("/list", [authJwt.verifyToken], control.findList);
-
+  
+  // Generate pdf
+  router.post("/pdf", control.generatePdf);
 
   // Retrieve all records
   router.get("/cuslist/:id", [authJwt.verifyToken], control.findCusList);
@@ -17,12 +19,20 @@ module.exports = app => {
   // Retrieve all records
   router.get("/get", control.findStates);
 
+  
+
   // Create a records
   router.post("/add", [authJwt.verifyToken], control.create);
 
   // Retrieve all trash records
   router.get("/trashall", [authJwt.verifyToken], control.trashAll);
 
+  // Send a quote to the customer
+  router.get("/sendcustomer/:id", [authJwt.verifyToken], control.sendQuoteToCustomer);
+
+  // Approve a quote
+  router.get("/approve/:id", [authJwt.verifyToken], control.approve);
+  
   // Retrieve a record
   router.get("/:id", [authJwt.verifyToken], control.findOne);
 

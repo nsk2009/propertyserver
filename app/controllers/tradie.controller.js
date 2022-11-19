@@ -5,6 +5,7 @@ const Admin = db.adminusers;
 const Columns = db.columns;
 const Job = db.jobs;
 const Quote = db.quotes;
+const Inbox = db.inbox;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 const excel = require("exceljs");
@@ -456,12 +457,18 @@ exports.findAllHistory = async (req, res) => {
 	const id = req.params.id;
 	const tradie = await Table.findById(id).populate({ path: 'createdBy', select: ['firstname', 'lastname'] }).populate({ path: 'modifiedBy', select: ['firstname', 'lastname'] });
 	//const job = await Job.find({tradie:id}).populate({ path: 'customer', select: ['firstname', 'lastname'] }).populate({ path: 'createdBy', select: ['firstname', 'lastname'] }).populate({ path: 'modifiedBy', select: ['firstname', 'lastname'] });
-	const jobs = await Job.find({tradie: id});  
+	const jobs = await Job.find({tradie: id}); 
+	const info = [];
+	jobs.forEach(function(doc, err) {
+	  info.push(doc._id);
+	});
+	const mails = await Inbox.find({ job: { $in: info }}).sort({ _id: -1 }); 
 	const quotes = await Quote.find({tradie: id}); 
 	res.send({
 		tradie: tradie,
 		job: jobs,
 		quotes: quotes,
+		mails: mails,
 	  });
 }
 

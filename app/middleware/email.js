@@ -73,11 +73,18 @@ const message = async(id, user, values) => {
 		});		
 		//console.log(str);
 		htmlToSend = htmlToSend.replace('content', str);
+		//'https://salesplanner.org/demo/property/server/uploads/1663415591197-stock-photo-1052601383.jpg'
 		var mailOptions = {
 			from: from,
 			to : to,
 			subject : subject,
-			html : htmlToSend
+			html : htmlToSend,
+			attachments:values['{attachment}']? [
+		        {   // file on disk as an attachment
+		            filename: '1663415591197-stock-photo-1052601383.jpg',
+		            path: values['{attachment}'] // stream this file
+		        },
+			]:null
 		};
 		if(set.default === 'GMail'){
 			transporter.sendMail(mailOptions, function (error, response) {

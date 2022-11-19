@@ -6,6 +6,10 @@ module.exports = (mongoose, mongoosePaginate) => {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "customer"
 		},
+		enquiry:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "enquiry"
+		},
 		pricing_level: String,
 		site: String,
 		quote_date: String,
@@ -33,14 +37,24 @@ module.exports = (mongoose, mongoosePaginate) => {
 		notes:Array,
 		uid:String,
 		items: Array,
+		senttocustomer: {
+			type: Number,
+			enum : [0, 1],
+			default: 0
+		}, 
+		movedtojob: {
+			type: Number,
+			enum : [0, 1],
+			default: 0
+		}, 
 		tradie:{
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "tradie"
 		},
 		status: {
 			type: String,
-			enum : ['Active','Inactive','Trash'],
-			default: 'Active'
+			enum : ['Pending','Approved','Declined'],
+			default: 'Pending'
 		}, 
 		createdBy: {
 			type: mongoose.Schema.Types.ObjectId,

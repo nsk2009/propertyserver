@@ -344,6 +344,15 @@ app.get('/inbox/:file(*)', (req, res) => {
     res.sendFile(`${fileLocation}`)
 });
 
+app.get('/invoices/:file(*)', (req, res) => {
+  let file = req.params.file;
+  //console.log(file);
+  if(file === 'undefined' || file === '')
+    file = 'no-image.jpg';
+  let fileLocation = __basedir+'/invoices/'+file;
+  res.sendFile(`${fileLocation}`)
+});
+
 global.cmsLink = '';
 global.templateLink = '';
 global.tradieLink = '';
@@ -388,7 +397,7 @@ app.post('*', function(req, res){
   res.status(404).send({ message : "Page not found!"});
 });
 // set port, listen for requests
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5001
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });

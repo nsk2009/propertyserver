@@ -5,6 +5,7 @@ const Setting = db.settings;
 const Job = db.jobs;
 const Quote = db.quotes;
 const Invoice = db.invoices;
+const Inbox = db.inbox;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 const excel = require("exceljs");
@@ -116,10 +117,15 @@ exports.details = async(req, res) => {
 	const id = req.params.id;
 	const ip = req.headers['x-forwarded-for'];
 	const data = await Table.findById(id).populate('createdBy').populate('modifiedBy');	
-	const jobs = await Job.find({customer: id}).populate('tradie');  
+	const jobs = await Job.find({customer: id}).populate('tradie');
+	const info = [];
+	jobs.forEach(function(doc, err) {
+	  info.push(doc._id);
+	});
+	const mails = await Inbox.find({ job: { $in: info }}).sort({ _id: -1 });	
 	const quotes = await Quote.find({customer: id}); 
 	const invoices = await Invoice.find({customer: id}); 
-	res.send({data:data, jobs: jobs, quotes: quotes, invoices: invoices});
+	res.send({data:data, jobs: jobs, quotes: quotes, invoices: invoices, mails: mails});
   };
 
   // Find a single record with an id

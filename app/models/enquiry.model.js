@@ -7,15 +7,23 @@ module.exports = (mongoose, mongoosePaginate) => {
       email: String,
       uid:String,
       phone: String,
-      address : Array,
+      address : String,
       tradie : Array,
+      responsed_tradies : Array,
+      rfq_description:String,
       tradie_label : Array,
+      history:Array,
       lat: String,
       lng: String,
-      jobaddress : Array,
+      jobaddress : String,
       joblat: String,
       joblng: String,
       description : String,
+      movedtoquote : {
+        type:Number,
+        enum:[0, 1],
+        default:0
+      },
       customer:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "customer"

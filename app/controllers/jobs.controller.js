@@ -5,6 +5,7 @@ const Admin = db.adminusers;
 const Quote = db.quotes;
 const Enquiry = db.enquiry;
 const Setting = db.settings;
+const Inbox = db.inbox;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 var sprintf = require('sprintf-js').sprintf;
@@ -33,17 +34,22 @@ exports.create = async(req, res) => {
 			return res.status(400).send({ message:'test' });
 		else{*/
 			req.body.uid="JOB" + Autoid;
-			 Table.create(req.body)
+      
+      Table.create(req.body)
 			.then(async(data1) => {
 			  if (!data1) {
 				res.status(404).send({ message: ms.messages[0].message});
 			  } else {
-          activity(req.body.name+' module. '+ms.messages[2].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+          if(req.body.quote){
+            await Quote.findByIdAndUpdate(req.body.quote, {movedtojob:1}, {useFindAndModify:false});
+          }
+          activity(req.body.uid+' module. '+ms.messages[2].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
 		  await Setting.findByIdAndUpdate(settings_id, { job: set.job + 1 }, { useFindAndModify: false }); 
           res.send({ message: ms.messages[2].message });
       }
 			})
 			.catch((err) => {
+				console.log(err);
 			  res.status(500).send({ message:ms.messages[0].message});
 			});
     //}
@@ -55,7 +61,7 @@ exports.create = async(req, res) => {
 
 // Retrieve all records from the database.
 exports.findAll = async(req, res) => {
-  const { page, size, search, field, dir, status, show } = req.query;
+  const { page, size, search, field, dir, status, show, tradie } = req.query;
   var sortObject = {};
   if(search){
   var users = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }
@@ -71,10 +77,11 @@ exports.findAll = async(req, res) => {
 
   condition.status = status ? status : { $ne : 'Trash'};
   if(show) condition.show = show;
+  if(tradie) condition.tradie = tradie;
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
-  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer', 'tradie'], offset, limit, sort: sortObject })
+  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer', 'tradie', 'quote', 'enquiry'], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
         totalItems: data.totalDocs,
@@ -92,7 +99,6 @@ exports.findAll = async(req, res) => {
 exports.autoload = async (req, res) => {
 
   const id = req.params.id;
-  const { subsId, page1, page2, page3, page5, page8, page7 } = req.query;
   /*const transactions = await Transactions.find({ customer_id: id }).populate([{ path: "advance_id", select: ["advance_amount", "advance_id"] }])
     .populate([{ path: "sub_id", select: ["plan_amount", "subs_id"] }]).limit(Number(page8)).sort({ txndate: -1 });
   const advances = await Advance.find({ customer_id: id }).limit(Number(page7)).sort({ advance_date: -1 });
@@ -104,16 +110,19 @@ exports.autoload = async (req, res) => {
   const sms = await SMSnotifi.find({ user: id }).limit(Number(page3)).populate(['createdBy']).sort({ _id: -1 });
   const email = await CustNotifi.find({ user: id }).limit(Number(page3)).populate(['createdBy']).sort({ _id: -1 });
   const calls = await Calls.find({ customer_id: id }).limit(Number(page2)).populate(['createdBy']).sort({ _id: -1 });*/
-	
+  //const invoices = await Invoice.find({ job: id});
+  const mails = await Inbox.find({ job: id}).sort({ _id: -1 });
+  const invoice = await Invoice.findOne({ job: id});
+  const details = await Table.findOne({ _id: id})
+    .populate('createdBy')
+    .populate('modifiedBy')
+    .populate('customer')
+    .populate('quote')
+    .populate('tradie');
   res.send({
-    transactions: [],
-    subscriptions: [],
-    advances: [],
-    notes: [],
-    smslist: [],
-    emaillist: [],
-    calls: [],
-	subsPayment : []
+    mails: mails,
+    invoice: invoice,
+    details: details,
   });
 };
 
@@ -138,7 +147,7 @@ exports.findStates = async (req, res) => {
 // Application Service
 exports.findList = async(req, res) => {
 	const { show, status } = req.query;
-	Table.find({show: show, status: status})
+	Table.find({})
   .sort({name: 1})
     .then((data) => {
       res.send({list: data});
@@ -222,6 +231,7 @@ exports.makeinvoice = async(req, res) => {
   info.tax = data.tax;
   info.createdBy = req.headers["user"];
   var inv = await Invoice.create(info);
+  await Table.findByIdAndUpdate(id, { invoice: 1 }, { useFindAndModify: false }); 
   await Setting.findByIdAndUpdate(settings_id, { invoice: set.invoice + 1 }, { useFindAndModify: false }); 
   res.send({ message: "Job has beeen successfully convert as invoice", id: inv.id});
 };
@@ -231,11 +241,11 @@ exports.quote = async(req, res) => {
   const id = req.params.id;
   var data = await Enquiry.findById(id);
   if(data){ 
-	res.send({type: '1', quote:0, customer: data.customer, address: data.address, description: data.description, items: []});
+	res.send({type: '1', enqid: data.uid, enquiry: data.id, quote:0, customer: data.customer, address: data.address, description: data.description, items: []});
   }
   else{
 	data = await Quote.findById(id);
-	res.send({type: '0', quote: data.id, customer: data.customer, address: '', description: data.description, items: data.items, tax: data.tax, discount: data.discount, distype: data.distype});
+	res.send({type: '0', enqid: data.uid, enquiry: data.enquiry, quote: data.id, customer: data.customer, address: '', description: data.description, subtotal:data.subtotal, items: data.items, tax: data.tax, discount: data.discount, distype: data.distype, tradie:data.tradie});
   }
 };
 

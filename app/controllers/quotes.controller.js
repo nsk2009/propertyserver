@@ -2,10 +2,22 @@ const db = require("../models");
 const Table = db.quotes;
 const Admin = db.adminusers;
 const Setting = db.settings;
+const TradieTable = db.tradie;
+const enquiryTable = db.enquiry;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 var sprintf = require('sprintf-js').sprintf;
 const settings_id = '6275f6aae272a53cd6908c8d';
+//Required package
+var pdf = require("pdf-creator-node");
+var juice = require('juice');
+var fs = require("fs");
+const email = require("../middleware/email");
+const gethtml = require("../middleware/pdfhtml");
+var css = fs.readFileSync("quote.css", "utf8");
+	
+// Read HTML Template
+// var html = fs.readFileSync("template.html", "utf8");
 
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
@@ -39,6 +51,12 @@ exports.create = async(req, res) => {
 			  if (!data) {
 				res.status(404).send({ message: ms.messages[1].message});
 			  } else {
+				if(req.body.enquiry){
+					const enq= await enquiryTable.findById(req.body.enquiry);
+					var responsed_tradies = enq.responsed_tradies ?enq.responsed_tradies:[];
+					responsed_tradies.push(req.body.tradie);
+					await enquiryTable.findByIdAndUpdate(req.body.enquiry, {responsed_tradies:responsed_tradies}, {useFindAndModify:false});
+				}
           activity(req.body.name+' module. '+ms.messages[0].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
 		  await Setting.findByIdAndUpdate(settings_id, { quotes: set.quotes + 1 }, { useFindAndModify: false }); 
 		  res.send({ message: ms.messages[0].message, id: data._id });
@@ -56,7 +74,7 @@ exports.create = async(req, res) => {
 
 // Retrieve all records from the database.
 exports.findAll = async(req, res) => {
-  const { page, size, search, field, dir, status, show } = req.query;
+  const { page, size, search, field, dir, status, show, tradie } = req.query;
   var sortObject = {};
   if(search){
   var users = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }
@@ -72,10 +90,15 @@ exports.findAll = async(req, res) => {
 
   condition.status = status ? status : { $ne : 'Trash'};
   if(show) condition.show = show;
+  if(tradie) condition.tradie = tradie;
+//   else {
+// 	condition.createdBy= { $ne : null};
+// 	condition.status= { $ne : 'Pending'};
+// }
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
-  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer', 'tradie'], offset, limit, sort: sortObject })
+  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer', 'tradie', 'enquiry'], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
         totalItems: data.totalDocs,
@@ -124,7 +147,7 @@ exports.findList = async(req, res) => {
 exports.findCusList = async(req, res) => {
   const id = req.params.id;
 	const { status } = req.query;
-	Table.find({customer: id, status: status})
+	Table.find({customer: id, status: "Approved"})
   .sort({name: 1})
     .then((data) => {
       res.send({list: data});
@@ -180,6 +203,33 @@ exports.findOne = async(req, res) => {
     });
 };
 
+// approve a quote
+exports.approve = async(req, res) => {
+	const id = req.params.id;
+	var ms = await msg('quotes');
+	Table.findById(id)
+	  .populate('createdBy')
+	  .populate('modifiedBy')
+	  .populate('customer')
+	  .then(async(data) => {
+		if (!data)
+		res.status(404).send({ message: "OK"});
+		else {
+			await Table.updateMany({enquiry:data.enquiry}, {status:"Declined"}, {useFindAndModify:false});
+			await Table.findByIdAndUpdate(id, {status:"Approved"}, {useFindAndModify:false});
+			await enquiryTable.findByIdAndUpdate(data.enquiry, {movedtoquote:1}, {useFindAndModify:false});
+			if(data.tradie){
+				const tradieDet = await TradieTable.findById(data.tradie);
+			await email('63786d08b055c0628e7e32d3', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${cmsLink}`, '{quote}':data.uid});
+			}
+			res.send({message:"Quote has been approved successfully"});
+		}
+	  })
+	  .catch((err) => {
+		res.status(500).send({ message: "Invalid quote id"});
+	  });
+  };
+  
 
 // Update a record by the id in the request
 exports.update = async(req, res) => {
@@ -336,3 +386,68 @@ exports.restore = async(req, res) => {
       res.status(500).send({ message: ms.messages[7].message});
 	  });
 };
+// var html = "<!DOCTYPE html> <html>  <head>	<meta charset='utf-8' /><title>Hello world!</title>  </head>  <body>	<h1>User List</h1><ul>{{#each users}}<li>Name: {{this.name}}</li><li>Age: {{this.age}}</li><br />{{/each}}</ul></body></html>"
+// Find a single record with an id
+exports.generatePdf = async(req, res) => {
+	const {id, html} = req.body;
+	var content = juice(`<style>${css}</style>${html}`);	
+	var options = {
+        format: "A4",
+        orientation: "portrait",
+        border: "1mm",
+        header: {
+            height: "40mm",
+            contents: '<div style="text-align: center;"><img src="https://salesplanner.org/demo/property/server/uploads/1664349489012-logo_.png" alt="logo" /></div>'
+        },
+        footer: {
+            height: "5mm",
+            contents: {
+                first: 'Cover page',
+                default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
+                last: 'Last Page'
+            }
+        }
+    };
+
+
+	  var document = {
+		html: content,
+		data: {
+		  
+		},
+		path: `./invoices/${id}.pdf`,
+		type: "",
+	  };
+	pdf
+  .create(document, options)
+  .then((data) => {
+	res.send(data.filename);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+  };
+  // Send a quote to the customer
+exports.sendQuoteToCustomer = async(req, res) => {
+	const id = req.params.id;
+	var ms = await msg('quotes');
+	Table.findById(id)
+	  .populate('createdBy')
+	  .populate('modifiedBy')
+	  .populate('customer')
+	  .then(async(data) => {
+		if (!data)
+		res.status(404).send({ message: "OK"});
+		else {
+			//const text = await gethtml.quotehtml();
+			await email('6378b084b055c0628e7e32d9', 'admin', {'{name}': data.customer.firstname, '{email}': data.customer.email, '{link}': `${cmsLink}`, '{attachment}':'https://salesplanner.org/demo/property/server/uploads/1663415591197-stock-photo-1052601383.jpg'});
+			await Table.findByIdAndUpdate(id, {senttocustomer:1}, {useFindAndModify:false});
+			res.send({message:"Quote has been sent to customer!"});
+		}
+	  })
+	  .catch((err) => {
+		res.status(500).send({ message: "Invalid quote id"});
+	  });
+  };
+  
+  

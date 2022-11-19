@@ -9,12 +9,16 @@ module.exports = (mongoose, mongoosePaginate) => {
 		text:String,
 		to: String,
 		attachment: Array,
-    uid:Number,
-    viewstatus:{
-      type:String,
-      enum:['seen', 'unseen', 'trash'],
-      default:'unseen'
-    }
+		uid:Number,
+		viewstatus:{
+		  type:String,
+		  enum:['seen', 'unseen', 'trash'],
+		  default:'unseen'
+		},
+      job: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "jobs"
+      },
 	
     },
 	{ timestamps: true }

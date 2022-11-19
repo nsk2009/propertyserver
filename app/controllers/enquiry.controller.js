@@ -1,7 +1,7 @@
 const db = require("../models");
 const Table = db.enquiry;
-const Role = db.role;
 const Columns = db.columns;
+const TradieTable = db.tradie;
 const Setting = db.settings;
 const excel = require("exceljs");
 const msg = require("../middleware/message");
@@ -53,7 +53,7 @@ exports.activity = async(req, res) => {
 // Retrieve all records from the database.
 exports.findAll = async(req, res) => {
   var ms = await msg('enquiry');
-  const { page, size, search, field, dir, status, role } = req.query;
+  const { page, size, search, field, dir, status, tradie } = req.query;
   var sortObject = {};
   //console.log(info);
   if(search){	
@@ -63,14 +63,13 @@ exports.findAll = async(req, res) => {
   condition = {};
   condition.status = status ? status : { $ne : 'Trash'};
   condition._id = { $ne : '61efce935f2e3c054819a02f'};
+  if(tradie) condition.tradie={$in:tradie};
   const crby = ({path: 'createdBy', select: {'firstname': 1, 'lastname': 1}});
   const mfby = {path: 'modifiedBy', select: {'firstname': 1, 'lastname': 1}}; 
   const cust = {path: 'customer', select: {'firstname': 1, 'lastname': 1}}; 
+  
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
-//condition = {};
-  //condition._id = { $ne : '61efce935f2e3c054819a02f'};
-  //condition.role.name = { $ne : null};
   Table.paginate(condition, { collation: { locale: "en" }, populate: [crby, mfby, cust], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
@@ -121,7 +120,6 @@ exports.findOne = async(req, res) => {
     .populate('createdBy')
     .populate('modifiedBy')
     .populate('customer')
-    .populate('role')
     .then((data) => {
       if (!data)
       res.status(404).send({ message: ms.messages[8].message});
@@ -132,6 +130,25 @@ exports.findOne = async(req, res) => {
     });
 };
 
+// Find a single record with an id
+exports.findHistory = async(req, res) => {
+  const id = req.params.id;
+  
+  TradieTable.find({status:'Active'})
+    .populate('createdBy')
+    .populate('modifiedBy')
+    .then(async(data) => {
+      if (!data)
+      res.status(404).send({ message: ms.messages[8].message});
+      else {
+      
+        res.send(data);
+      }
+    })
+    .catch((err) => {
+      res.status(500).send({ message: ms.messages[8].message});
+    });
+};
 // Update all records from the database.
 exports.updateAll = async(req, res) => {
   var ms = await msg('enquiry');
@@ -350,8 +367,50 @@ exports.exceldoc = async(req, res) => {
 };
 
 exports.sendEnquiry = async (req, res) => {
+  var ms = await msg('enquiry');
 	const id = req.params.id;
 	const enquiry = await Table.findById(id).populate({ path: 'createdBy', select: ['firstname', 'lastname'] }).populate({ path: 'modifiedBy', select: ['firstname', 'lastname'] });
-		
-	res.send(enquiry);
+	var ids=enquiry.tradie ? enquiry.tradie : [];
+  var trd=[];
+	var history=enquiry.history ? enquiry.history : [];
+  var description=req.body.description;
+  req.body.tradie.forEach((e)=>{
+    ids.push(e.value);
+    trd.push(e.value);
+  });	
+  var his={};
+  his.tradies=trd;
+  his.description=description;
+  his.date=new Date();
+history.push(his);
+   Table.findByIdAndUpdate(id, {tradie:ids, rfq_description:description, history:history}, {useFindAndModify:false})
+  .then(async(list)=>{
+    const trds = await TradieTable.find({_id:{$in:trd}, status:"Active"}).then((res)=>{return res;}).catch((e)=>{return null;});
+    if(trds.length>0) {
+      // trds.forEach(async(data)=>{
+        for(const data of trds){
+      await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${cmsLink}`, '{description}' : `${description}`});
+      console.log(data.email);
+    };    
+  }
+  console.log(list);
+  console.log('test');
+    res.send({message:"Enquiry has been sent to tradie"});
+  })
+  .catch((e)=>{ 
+    res.status(400).send({message:"Oops! Enquiry can't be send!"});
+  });
+	
+}
+
+exports.resendEnquiry = async (req, res) => {
+  var ms = await msg('enquiry');
+	const {id, index, tradie} = req.query;
+  const enquiry = await Table.findById(id);
+    const tradieDet = await TradieTable.findById(tradie);
+if(enquiry&& tradieDet && index){
+     await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${cmsLink}`, '{description}' : `${enquiry.history[index].description}`});
+     res.send({message:"Enquiry has been sent to tradie"});
+}
+     else res.status(404).send({message:"Enquiry or Tradie is not found!"});
 }

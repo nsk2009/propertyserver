@@ -100,7 +100,7 @@ exports.forgot = async (req, res) => {
 				activity(ms.messages[2].message, data._id, 'admin', req.session.useragent, req.session.useragent.password);
 				return res.status(200).send({ message: ms.messages[2].message });
 			}
-		})
+		}) 
 		.catch((err) => {
 			res.status(500).send({ message: "Error retrieving record" });
 		});

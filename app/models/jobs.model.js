@@ -1,9 +1,13 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
-		name: String,
+		title: String,
 		address: String,
 		startdate: String,
+		enquiry:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "enquiry"
+		},
 		quote:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "quotes"
@@ -41,6 +45,10 @@ module.exports = (mongoose, mongoosePaginate) => {
 		taxname: String,
 		tax: String,
 		items: Array,
+		invoice: {
+			type: Number,
+			default: 0
+		},
 		status: {
 			type: String,
 			enum : ['Active','Inactive','Trash'],

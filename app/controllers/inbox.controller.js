@@ -1,4 +1,5 @@
 const db = require("../models");
+var sessionstorage = require('sessionstorage');
 const Admin = db.adminusers;
 const Settings = db.settings;
 const EmailApi = db.emailapi;
@@ -21,6 +22,147 @@ const emailapi_id = '628f4d007abca8d1c3471a17';
 
 // Retrieve all records from the database.
 exports.syncMails = async (req, res) => {
+   // console.log('bug found')
+	var emailapis= await EmailApi.findById(emailapi_id);
+	var set = await Settings.findById(set_id);
+	var email =  emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username;
+	const imap = new Imap({
+		user: emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username,
+		password: emailapis.gmail_type==='Live' ? emailapis.live_gmail_password : emailapis.sand_gmail_password,
+		host: 'imap.gmail.com',
+		port: 993,
+		tls: true,
+		tlsOptions: {
+			rejectUnauthorized: false
+		},
+		authTimeout: 3000
+	});
+  
+	// var dt= [];
+
+	function openInbox(cb) {
+		imap.openBox('INBOX', true, cb);
+	}
+	function toUpper(thing) { return thing && thing.toUpperCase ? thing.toUpperCase() : thing;}
+
+	function findAttachmentParts(struct, attachments) {
+		attachments = attachments ||  [];
+		for (var i = 0, len = struct.length, r; i < len; ++i) {
+			if (Array.isArray(struct[i])) {
+				findAttachmentParts(struct[i], attachments);
+			} else {
+				if (struct[i].disposition && ['INLINE', 'ATTACHMENT'].indexOf(toUpper(struct[i].disposition.type)) > -1) {
+					attachments.push(struct[i]);
+				}
+			}
+		}
+		return attachments;
+	}
+	
+	function buildAttMessageFunction(attachment) {
+		var filename = attachment.params.name;
+		var encoding = attachment.encoding;
+
+		return function (msg, seqno) {
+			var prefix = '(#' + seqno + ') ';
+			msg.on('body', function(stream, info) {
+				//Create a write stream so that we can stream the attachment to file;
+				//console.log(prefix + 'Streaming this attachment to file', filename, info);
+				var writeStream = fs.createWriteStream('./inbox/'+filename);
+				writeStream.on('finish', function() {
+					//console.log(prefix + 'Done writing to file %s', filename);
+				});
+
+				//stream.pipe(writeStream); this would write base64 data to the file.
+				//so we decode during streaming using 
+
+				if (toUpper(encoding) === 'BASE64') {
+					//the stream is base64 encoded, so here the stream is decode on the fly and piped to the write stream (file)
+					stream.pipe(new Base64Decode()).pipe(writeStream);
+				} else  {
+					//here we have none or some other decoding streamed directly to the file which renders it useless probably
+					stream.pipe(writeStream);
+				}
+			});
+			msg.once('end', function() {
+				//console.log(prefix + 'Finished attachment %s', filename);
+			});
+		};
+	}
+	//['SUBJECT', 'Give Subject Here']]
+	imap.once('ready', function() {
+		var fs = require('fs'), fileStream;
+		openInbox(async(err, box) =>{
+			if (err) throw err;
+			// imap.search([ 'UNSEEN', ['SINCE', 'Sep 20, 2022'] ], function(err, results) {
+			//   if (err) throw err; 
+			// var f = imap.fetch(results, { bodies: '' });
+			//var f = imap.seq.fetch(data.uid +':'+data.uid, { bodies: '', struct: true });
+			var f = imap.seq.fetch(set.inbox_count + ':*', { bodies: '', struct: true });
+			f.on('message', async(msg, seqno)=> {
+				//console.log('Message #%d', seqno);
+				var prefix = '(#' + seqno + ') ';
+				msg.on('body', async(stream, info)=> {
+					simpleParser(stream, async(err, mail) => {
+						//console.log(mail.subject, 'subject'); 
+						//console.log('item set:', sessionstorage.getItem('attachments'));
+						var data = {};
+						data.subject= mail.subject;
+						data.email= email;
+						data.from= mail.from ? mail.from.text : '';
+						data.date= mail.date;
+						data.html= mail.html;
+						data.text= mail.text;
+						data.uid= seqno;
+						if(sessionstorage.getItem('attachments')){							
+							data.attachment = sessionstorage.getItem('attachments');
+							sessionstorage.clear('attachments')
+						}
+						await Table.create(data);
+						await Settings.findByIdAndUpdate(set_id, {inbox_count : parseInt(seqno)+1}, {useFindAndModify:false});  
+					});
+				});
+				msg.once('attributes', async function(attrs) {
+					var attachments = findAttachmentParts(attrs.struct);
+					sessionstorage.setItem('attachments', attachments);
+					for (const attachment of attachments) {
+					  var f = imap.fetch(attrs.uid , { //do not use imap.seq.fetch here
+						bodies: [attachment.partID],
+						struct: true 
+					  });
+					  //build function to process attachment message
+					  f.on('message', buildAttMessageFunction(attachment));
+					}
+				});
+				msg.once('end', function() {
+					//console.log(prefix + 'Finished');
+				});
+			});
+			f.once('error', function(err) {
+				//console.log('Fetch error: ' + err);
+			});
+			f.once('end', function() {
+				//console.log('Done fetching all messages!');
+				imap.end();
+			});
+		});
+		// });
+	});
+  
+	imap.once('error', function(err) {
+		//console.log(err);
+	});
+
+	imap.once('end', function() {
+		//console.log('Connection ended');
+		res.send('download new succeed!')
+	});
+
+	imap.connect();
+};
+
+// Retrieve all records from the database.
+exports.syncMailsOld = async (req, res) => {
    // console.log('bug found')
 	var emailapis= await EmailApi.findById(emailapi_id);
 	var set = await Settings.findById(set_id);
@@ -123,7 +265,6 @@ exports.syncMails = async (req, res) => {
 
 	imap.connect();
 };
-
 
 // Retrieve all records from the database.
 exports.download = async (req, res) => {
@@ -289,6 +430,7 @@ exports.findAll = async(req, res) => {
 exports.findOne = async(req, res) => {
     const id = req.params.id;
     var ms = await msg('invoices');
+	await Table.findByIdAndUpdate(id, {viewstatus:'seen'}, {useFindAndModify:false});
     Table.findById(id)
       .then((data) => {
         if (!data)
@@ -314,3 +456,19 @@ exports.setRead = async(req, res) => {
         res.status(500).send({ message: "Invalid Mail uid"});
       });
   };
+
+// Update all records from the database.
+exports.updateAll = async(req, res) => {
+  //var ms = await msg('adminusers');
+  const { ids, job } = req.query;
+  Table.updateMany(
+   { _id: { $in: JSON.parse(ids) } },
+   { $set: { job : job } })
+    .then((data) => {
+		//activity('Those mails has been updated successfully with job.', req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.updateAll);
+      res.status(200).send({ message: 'Those mails has been updated successfully with job.'});
+    })
+    .catch((err) => {
+      res.status(500).send({ message: 'Maybe record was not found!'});
+    });
+};
