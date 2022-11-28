@@ -1,6 +1,6 @@
 module.exports = app => {
   // const login = require("../controllers/customer.login.controller.js");
-  const control = require("../controllers/suppliers.controller.js");
+  const control = require("../controllers/mailbox.controller.js");
   const { authJwt } = require("../middleware");
   const upload = require("../middleware/upload");
   var router = require("express").Router();
@@ -10,23 +10,17 @@ module.exports = app => {
   // Retrieve all records
   router.get("/", [authJwt.verifyToken], control.findAll);
 
-  // Retrieve list records
-  router.get("/list", [authJwt.verifyToken], control.findList);
-
-  // Retrieve all trash records
-  //router.get("/trashall", [authJwt.verifyToken], control.trashAll);
+   // Retrieve all records
+   router.get("/list", [authJwt.verifyToken], control.findList);
 
   // Update selected records
   router.get("/updateall", [authJwt.verifyToken], control.updateAll);
-  
-  // Retrieve all published records
-  router.get("/exceldoc", [authJwt.verifyToken], control.exceldoc);
 
   // Update a record status with id
   router.get("/trash/:id", [authJwt.verifyToken], control.trash);
 
-  // Restore a record status with id
-  router.get("/restore/:id", [authJwt.verifyToken], control.restore);
+  // Update a record status with id
+  router.get("/setdefault/:id", [authJwt.verifyToken], control.setdefault);
 
   // Retrieve a single record with id
   router.get("/:id", [authJwt.verifyToken], control.findOne);
@@ -52,5 +46,5 @@ module.exports = app => {
     next();
   });
 
-  app.use("/api/suppliers", router);
+  app.use("/api/mailbox", router);
 };

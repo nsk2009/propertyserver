@@ -1,16 +1,19 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
-      name: String,
-      color: String,
-      contact:String, 
-      alignment:String, 
-     billing_minimum:String,
-     billing_rounding:String,
+      name:String,
+      email: String,
+      phone: String,
+      address : String,
+      site: String,
       status: {
         type: String,
         enum: ['Active', 'Inactive', 'Trash'],
         default: 'Active'
+      },
+      agent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "agent"
       },
       createdBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -32,6 +35,6 @@ module.exports = (mongoose, mongoosePaginate) => {
 
   schema.plugin(mongoosePaginate);
 
-  const Products = mongoose.model("docthemes", schema);
-  return Products;
+  const Table = mongoose.model("tenant", schema);
+  return Table;
 };

@@ -1,8 +1,25 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
-      name: String,
-      type: String,
+      email:String,
+      password:String,
+      host:String,
+      port:String,
+	  mail: Number,
+      mail: {
+        type: Number,
+        default: 1
+      },
+      default: {
+        type: Number,
+        enum: [0, 1],
+        default: 0
+      },
+      tls: {
+        type: String,
+        enum: ['yes', 'no'],
+        default: 'yes'
+      },
       status: {
         type: String,
         enum: ['Active', 'Inactive', 'Trash'],
@@ -28,6 +45,6 @@ module.exports = (mongoose, mongoosePaginate) => {
 
   schema.plugin(mongoosePaginate);
 
-  const Category = mongoose.model("categories", schema);
-  return Category;
+  const Table = mongoose.model("mailboxes", schema);
+  return Table;
 };

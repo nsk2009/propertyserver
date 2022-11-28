@@ -6,6 +6,14 @@ module.exports = (mongoose, mongoosePaginate) => {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "customer"
 		},
+		agent:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "agent"
+		},
+		tenant:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "tenant"
+		},
 		enquiry:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "enquiry"
@@ -51,10 +59,20 @@ module.exports = (mongoose, mongoosePaginate) => {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "tradie"
 		},
+		usertype: {
+			type: String,
+			enum : ['customer','agent'],
+			default: 'customer'
+		}, 
 		status: {
 			type: String,
-			enum : ['Pending','Approved','Declined'],
-			default: 'Pending'
+			enum : ['Draft','Revise','Approved','Declined', 'Pending', 'Moved to Job','Awaiting Client Approval'],
+			default: 'Draft'
+		}, 
+		tstatus: {
+			type: String,
+			enum : ['Draft','Revise','Approved','Declined', 'Sent to Admin','Awaiting Client Approval'],
+			default: 'Draft'
 		}, 
 		createdBy: {
 			type: mongoose.Schema.Types.ObjectId,

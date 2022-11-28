@@ -6,6 +6,7 @@ const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 var sprintf = require('sprintf-js').sprintf;
 const settings_id = '6275f6aae272a53cd6908c8d';
+//const pdf = require("../../pdf");
 
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;

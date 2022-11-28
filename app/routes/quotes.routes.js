@@ -18,9 +18,7 @@ module.exports = app => {
 
   // Retrieve all records
   router.get("/get", control.findStates);
-
   
-
   // Create a records
   router.post("/add", [authJwt.verifyToken], control.create);
 
@@ -28,16 +26,22 @@ module.exports = app => {
   router.get("/trashall", [authJwt.verifyToken], control.trashAll);
 
   // Send a quote to the customer
-  router.get("/sendcustomer/:id", [authJwt.verifyToken], control.sendQuoteToCustomer);
+  router.post("/sendcustomer/:id", [authJwt.verifyToken], control.sendQuoteToCustomer);
 
   // Approve a quote
-  router.get("/approve/:id", [authJwt.verifyToken], control.approve);
+  router.get("/approve/:id/:status", [authJwt.verifyToken], control.approve);
+  
+  // Retrieve a record
+  router.get("/details/:id", [authJwt.verifyToken], control.details);
   
   // Retrieve a record
   router.get("/:id", [authJwt.verifyToken], control.findOne);
 
   // update a records
   router.post("/:id", [authJwt.verifyToken], control.update);
+
+    // Send quote to admin from tradie
+    router.post("/sendtoadmin/:id", control.sendToAdmin);
 
   // revise a records
   router.post("/revise/:id", [authJwt.verifyToken], control.revise);

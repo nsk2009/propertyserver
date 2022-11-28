@@ -2,11 +2,26 @@ module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
       content : String,
-      to: {
+      customer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "customer"
       },
-      type : String,
+      agent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "agent"
+      },
+      job: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "jobs"
+      },
+      quote: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "quotes"
+      },
+      tradie: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "tradie"
+      },
       createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "adminuser"

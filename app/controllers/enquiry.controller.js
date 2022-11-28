@@ -383,14 +383,13 @@ exports.sendEnquiry = async (req, res) => {
   his.description=description;
   his.date=new Date();
 history.push(his);
-   Table.findByIdAndUpdate(id, {tradie:ids, rfq_description:description, history:history}, {useFindAndModify:false})
+   Table.findByIdAndUpdate(id, {tradie:ids, status: 'Quote Requested', rfq_description:description, history:history}, {useFindAndModify:false})
   .then(async(list)=>{
     const trds = await TradieTable.find({_id:{$in:trd}, status:"Active"}).then((res)=>{return res;}).catch((e)=>{return null;});
     if(trds.length>0) {
       // trds.forEach(async(data)=>{
         for(const data of trds){
-      await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${cmsLink}`, '{description}' : `${description}`});
-      console.log(data.email);
+      await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${tradieLink}`, '{description}' : `${description}`});
     };    
   }
   console.log(list);

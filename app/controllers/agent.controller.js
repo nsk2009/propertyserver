@@ -1,20 +1,19 @@
 const db = require("../models");
-const Table = db.tradie;
-const Setting = db.settings;
+const Table = db.agent;
+const Tenant = db.tenant;
 const Admin = db.adminusers;
-const Columns = db.columns;
+const Setting = db.settings;
 const Job = db.jobs;
 const Quote = db.quotes;
-const Inbox = db.inbox;
 const Note = db.notes;
+const Invoice = db.invoices;
+const Inbox = db.inbox;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 const excel = require("exceljs");
-var fs = require('fs');
 var sprintf = require('sprintf-js').sprintf;
 const settings_id = '6275f6aae272a53cd6908c8d';
-const email = require("../middleware/email");
-var bcrypt = require("bcryptjs");
+
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
   const offset = page ? page * limit : 0;
@@ -25,9 +24,9 @@ const getPagination = (page, size) => {
 
 // Create and Save a new record
 exports.create = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Agent');
 	var set = await Setting.findById(settings_id).then();
-	var Autoid = sprintf('%01d', set.tradies);
+	var Autoid = sprintf('%01d', set.agent);
 	if (!req.body.name && !req.body.email)    
 	  return res.status(400).send({ message: ms.messages[0].message });
 		req.body.phone = req.body.phone;
@@ -40,37 +39,56 @@ exports.create = async(req, res) => {
 			  return res.status(400).send({ message: ms.messages[1].message });
 		  else if (data && data.phone === phone)
 			  return res.status(400).send({ message: ms.messages[2].message });
-		  else{	
-			if(req.files.bcertificate)
-  				req.body.businesscertificate = req.files.bcertificate[0].filename;
-			if(req.files.lcertificate)
-  				req.body.liabilitycertificate = req.files.lcertificate[0].filename;	
-			const info = {};
-			Columns.find({type: 'Tradie'}, { name: 1, columns: 1 }).then(async(cursor) => {
-				//console.log(cursor);
-			  cursor.forEach(function(doc, err) {
-				  info[doc.name] = doc.columns;
-			  });
-			  req.body.columns = info;
-				req.body.property = set.property;
-				req.body.tradie = set.tradie;
-				req.body.uid =  'TRD' + Autoid;
-				req.body.role='6331845dd7919d3e64b0902d';
+		  else{		
+			req.body.uid= "AID"+Autoid;  
 			  Table.create(req.body)
 			  .then(async(data) => { 
 				if (!data) {
 				  res.status(404).send({ message: ms.messages[3].message});
 				} else {
-			activity(`${req.body.name} Tradie created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
-			await Setting.findByIdAndUpdate(settings_id, { tradies: set.tradies + 1 }, { useFindAndModify: false });
-			res.send({ message: ms.messages[5].message, id: data._id });
-			
+			activity(`${req.body.name} Agent created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+			await Setting.findByIdAndUpdate(settings_id, { agent: set.agent + 1 }, { useFindAndModify: false });
+			res.send({ message: ms.messages[5].message, id:data._id });
 		}
 			  })
 			  .catch((err) => {
 				res.status(500).send({ message: ms.messages[4].message });
 			  });
-			});
+	  }
+	}).catch((err) => {
+	  res.status(500).send({ message: ms.messages[4].message });
+	});
+		  
+  };
+
+// Create and Save a new record
+exports.createtenant = async(req, res) => {
+	var ms = await msg('Agent');
+	if (!req.body.name && !req.body.email)    
+	  return res.status(400).send({ message: ms.messages[0].message });
+		req.body.phone = req.body.phone;
+		req.body.email = req.body.email.trim();
+	  var phone = req.body.phone;
+	  var email = req.body.email;
+	  Tenant.findOne({ $or: [{ email: email}, { phone: phone}], status : { $ne : 'Trash'}})
+	  .then((data) => {
+		  if (data && data.email === email) 
+			  return res.status(400).send({ message: ms.messages[1].message });
+		  else if (data && data.phone === phone)
+			  return res.status(400).send({ message: ms.messages[2].message });
+		  else{		 
+			  Tenant.create(req.body)
+			  .then(async(data) => { 
+				if (!data) {
+				  res.status(404).send({ message: ms.messages[3].message});
+				} else {
+					activity(`${req.body.name} tenant created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+					res.send({ message: ms.messages[5].message, id:data._id });
+				}
+			  })
+			  .catch((err) => {
+				res.status(500).send({ message: ms.messages[4].message });
+			  });
 	  }
 	}).catch((err) => {
 	  res.status(500).send({ message: ms.messages[4].message });
@@ -80,7 +98,7 @@ exports.create = async(req, res) => {
 
 // Retrieve all records from the database.
 exports.findAll = async(req, res) => {
-  const { page, size, search, field, dir, status, show, type } = req.query;
+  const { page, size, search, field, dir, status, show } = req.query;
   var sortObject = {};
   if(search){
   var users = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }
@@ -96,11 +114,10 @@ exports.findAll = async(req, res) => {
 
   condition.status = status ? status : { $ne : 'Trash'};
   if(show) condition.show = show;
-  if(type) condition.type = type;
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
-  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy','tcreatedBy', 'tmodifiedBy'], offset, limit, sort: sortObject })
+  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy'], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
         totalItems: data.totalDocs,
@@ -114,28 +131,30 @@ exports.findAll = async(req, res) => {
     });
 };
 
-exports.findList = async(req, res) => {
-	Table.find({status:"Active"})
-	  .populate('createdBy')
-	  .populate('updatedBy')
-	  .then((data) => {
-		if (!data)
-		  res.status(404).send({ message: ms.messages[3].message });
-		else res.send({list:data});
-	  })
-	  .catch((err) => {
-		res.status(500).send({ message: ms.messages[3].message });
-	  });
-}
-
 // Find a single record with an id
 exports.findOne = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Agent');
 	const id = req.params.id;
 	const ip = req.headers['x-forwarded-for'];
 	Table.findById(id)
 	  .populate('createdBy')
-	  .populate('updatedBy')
+	  .populate('modifiedBy')
+	  .then((data) => {
+		if (!data)
+		  res.status(404).send({ message: ms.messages[3].message });
+		else res.send(data);
+	  })
+	  .catch((err) => {
+		res.status(500).send({ message: ms.messages[3].message });
+	  });
+  };
+
+// Find a single record with an id
+exports.gettenant = async(req, res) => {
+	var ms = await msg('Agent');
+	const id = req.params.id;
+	const ip = req.headers['x-forwarded-for'];
+	Tenant.findById(id)
 	  .then((data) => {
 		if (!data)
 		  res.status(404).send({ message: ms.messages[3].message });
@@ -151,15 +170,39 @@ exports.details = async(req, res) => {
 	const id = req.params.id;
 	const ip = req.headers['x-forwarded-for'];
 	const data = await Table.findById(id).populate('createdBy').populate('modifiedBy');	
-	const jobs = await Job.find({tradie: id});  
-	const quotes = await Quote.find({tradie: id}); 
-    const notes = await Note.find({ tradie: id}).sort({ _id: -1 }).populate('createdBy');
-	res.send({data:data, jobs: jobs, quotes: quotes, notes: notes});
+	const jobs = await Job.find({agent: id}).populate('tradie');
+	const info = [];
+	jobs.forEach(function(doc, err) {
+	  info.push(doc._id);
+	});
+	const mails = await Inbox.find({ job: { $in: info }}).sort({ _id: -1 });
+    const notes = await Note.find({ agent: id}).sort({ _id: -1 }).populate('createdBy');
+    const tenants = await Tenant.find({ agent: id}).sort({ _id: -1 }).populate('createdBy');	
+	const quotes = await Quote.find({agent: id}); 
+	const invoices = await Invoice.find({agent: id}); 
+	res.send({data:data, jobs: jobs, quotes: quotes, invoices: invoices, mails: mails, notes: notes, tenants: tenants});
+  };
+
+  // Find a single record with an id
+exports.findList = async(req, res) => {
+	
+	var ms = await msg('Agent');
+	Table.find({status:'Active'})
+	  .populate('createdBy')
+	  .populate('updatedBy')
+	  .then((data) => {
+		if (!data)
+		  res.status(404).send({ message: ms.messages[3].message });
+		else res.send({list:data});
+	  })
+	  .catch((err) => {
+		res.status(500).send({ message: ms.messages[3].message });
+	  });
   };
   
   // Update all records from the database.
   exports.updateAll = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Agent');
 	const { ids, status } = req.query;
 	Table.updateMany(
 	 { _id: { $in: JSON.parse(ids) } },
@@ -180,7 +223,7 @@ exports.details = async(req, res) => {
   
   // Update a record by the id in the request
   exports.update = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Agent');
 	if (!req.body)
 	  return res.status(400).send({ message: ms.messages[0].message});
 	const id = req.params.id; 
@@ -202,21 +245,13 @@ exports.details = async(req, res) => {
 			  return res.status(400).send({ message: ms.messages[2].message });
 		  else{
 		const olddata = await Table.findById(id); 
-		if(req.files.bcertificate){
-			fs.unlinkSync(__basedir+'/uploads/'+olddata.businesscertificate);
-  			req.body.businesscertificate = req.files.bcertificate[0].filename;
-		}
-		if(req.files.lcertificate){
-			fs.unlinkSync(__basedir+'/uploads/'+olddata.liabilitycertificate);
-  			req.body.liabilitycertificate = req.files.lcertificate[0].filename;
-		}
 			await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 			  .then(async(data) => {
 				if (!data) {
 				  res.status(404).send({ message: ms.messages[3].message});
 				} else {
 		   
-			activity(`${req.body.firstname} Lead updated successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+			activity(`${req.body.firstname} agent updated successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
 			res.send({ message: ms.messages[6].message });
 		  }
 			  })
@@ -229,30 +264,45 @@ exports.details = async(req, res) => {
 		  res.status(500).send({ message: ms.messages[3].message });		  
 	  });
   };
-
-   // Morgin a record by the id in the request
-   exports.morgin = async(req, res) => {
-	var ms = await msg('Customer');
-	if (!req.body)
-	  return res.status(400).send({ message: ms.messages[0].message});
-	const id = req.params.id;
-
-		
-			await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-			  .then(async(data) => {
+  
+// Update and Save a new record
+exports.updatetenant = async(req, res) => {
+	var ms = await msg('Agent');
+	if (!req.body.name && !req.body.email)    
+	  return res.status(400).send({ message: ms.messages[0].message });  
+	const id = req.params.id; 
+		req.body.phone = req.body.phone;
+		req.body.email = req.body.email.trim();
+	  var phone = req.body.phone;
+	  var email = req.body.email;
+	  Tenant.findOne({ $or: [{ email: email}, { phone: phone}], status : { $ne : 'Trash'}, _id: { $ne : id}})
+	  .then(async(data) => {
+		  if (data && data.email === email) 
+			  return res.status(400).send({ message: ms.messages[1].message });
+		  else if (data && data.phone === phone)
+			  return res.status(400).send({ message: ms.messages[2].message });
+		  else{		 
+			await Tenant.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+			  .then(async(data) => { 
 				if (!data) {
 				  res.status(404).send({ message: ms.messages[3].message});
 				} else {
-			res.send({ message: ms.messages[6].message });
-		  }
+					activity(`${req.body.name} tenant updated successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+					res.send({ message: ms.messages[5].message, id:data._id });
+				}
 			  })
 			  .catch((err) => {
-				res.status(500).send({ message: ms.messages[3].message });
+				res.status(500).send({ message: ms.messages[4].message });
 			  });
+	  }
+	}).catch((err) => {
+	  res.status(500).send({ message: ms.messages[4].message });
+	});
+		  
   };
   
   exports.updateColumns = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Agent');
   const id = req.params.id;
 	Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 	.then((data) => {
@@ -271,7 +321,7 @@ exports.details = async(req, res) => {
   
   // Delete a record with the specified id in the request
   exports.delete = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Agent');
 	const id = req.params.id;
   
 	Table.findByIdAndRemove(id, { useFindAndModify: false })
@@ -292,7 +342,7 @@ exports.details = async(req, res) => {
   
   // Delete all records from the database.
   exports.deleteAll = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Agent');
 	Table.deleteMany({})
 	  .then((data) => {
 		activity(`${data.deletedCount} Lead deleted many records permanently`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.delete);
@@ -309,7 +359,7 @@ exports.details = async(req, res) => {
   };
   
   exports.trash = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Agent');
 	  const id = req.params.id;
 	  
 	  Table.findById(id)
@@ -337,7 +387,7 @@ exports.details = async(req, res) => {
   };
   
   exports.restore = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Agent');
 	  const id = req.params.id;
 	  
 	  Table.findById(id)
@@ -452,79 +502,5 @@ exports.details = async(req, res) => {
 		  message:
 			err.message || "Some error occurred while retrieving records.",
 		});
-	  });
-  };
-
-exports.findAllHistory = async (req, res) => {
-	const id = req.params.id;
-	const tradie = await Table.findById(id).populate({ path: 'createdBy', select: ['firstname', 'lastname'] }).populate({ path: 'modifiedBy', select: ['firstname', 'lastname'] });
-	//const job = await Job.find({tradie:id}).populate({ path: 'customer', select: ['firstname', 'lastname'] }).populate({ path: 'createdBy', select: ['firstname', 'lastname'] }).populate({ path: 'modifiedBy', select: ['firstname', 'lastname'] });
-	const jobs = await Job.find({tradie: id}); 
-    const notes = await Note.find({ tradie: id}).sort({ _id: -1 }).populate('createdBy');
-	const info = [];
-	jobs.forEach(function(doc, err) {
-	  info.push(doc._id);
-	});
-	const mails = await Inbox.find({ job: { $in: info }}).sort({ _id: -1 }); 
-	const quotes = await Quote.find({tradie: id});
-	res.send({
-		tradie: tradie,
-		job: jobs,
-		quotes: quotes,
-		mails: mails,
-		notes: notes
-	  });
-}
-
-exports.sendKey = async(req, res, next) => {
-	var ms = await msg('login');
-	const id = req.params.id;
-	Table.findById(id)
-	  .then(async(data) => {
-		  if (!data)
-			  return res.status(400).send({ message: ms.messages[0].message });
-		  else{
-		await email('6373770854d8e5dda7f9e13f', 'admin', {'{name}': data.name +' '+ data.companyname, '{email}': data.email, '{link}': `${customerLink}register/${data.id}`});  
-				  return res.status(200).send({message: 'Activation link send to particular mail address', email:data.email});
-		}
-		})
-		.catch((err) => {
-		  res.status(500).send({ message: "Error retrieving record" });		  
-	  });
-  };
-  
-  
-// Create Password a record by the id in the request
-exports.createpassword = (req, res) => {
-	if (!req.body)
-	  return res.status(400).send({ message: "Data to update can not be empty!" });
-	const id = req.params.id;
-	Table.findById(id)
-	  .then((data) => {
-		const saltRounds = 10;
-		const myPlaintextPassword = req.body.password;
-  
-		bcrypt.genSalt(saltRounds, function (err, salt) {
-		  bcrypt.hash(myPlaintextPassword, salt, function (err, hash) {
-			Table.findByIdAndUpdate(id, { password: hash, status: 'Active' }, { useFindAndModify: false })
-			  .then(async(data) => {
-  
-				if (!data) {
-				  res.status(404).send({ message: err });
-				}
-				else {
-				 // await email('629489cbfabff6261014f1fc', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${cmsLink}`});  
-				//   activity('update#' + data.name + ' User password has been created successfully', req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.password);
-				  res.send({ message: "User password has been created successfully" });
-				}
-			  })
-			  .catch((err) => {
-				res.status(500).send({ message: err + id });
-			  });
-		  });
-		});
-	  })
-	  .catch((err) => {
-		res.status(500).send({ message: "Error retrieving record with id=" + id });
 	  });
   };

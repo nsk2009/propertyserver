@@ -1,12 +1,13 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
-      name: String,
-      state_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "usa_state"
-      },
-      show: String,
+      name:String,
+      company:String,
+      email: String,
+      phone: String,
+      address : String,
+      description : String,
+      uid:String,
       status: {
         type: String,
         enum: ['Active', 'Inactive', 'Trash'],
@@ -32,6 +33,6 @@ module.exports = (mongoose, mongoosePaginate) => {
 
   schema.plugin(mongoosePaginate);
 
-  const usa_cities = mongoose.model("usa_cities", schema);
-  return usa_cities;
+  const Table = mongoose.model("agent", schema);
+  return Table;
 };

@@ -14,6 +14,15 @@ module.exports = (mongoose, mongoosePaginate) => {
       tradie: String,
       cost:String,
 	  columns: [],
+      accname:String,
+      accnum:String,
+      bsbcode:String,
+      billaddress:String,	  
+      gst: {
+        type: String,
+        enum: ['Yes', 'No'],
+        default: 'Yes'
+      },
       role: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "role"

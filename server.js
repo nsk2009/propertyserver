@@ -4,7 +4,9 @@ const session = require('express-session');
 const parseurl = require('parseurl');
 const nodemailer = require("nodemailer");
 const cron = require("node-cron");
-inspect = require('util').inspect;
+inspect = require('util').inspect; 
+const bodyParser = require('body-parser')
+const crypto = require('crypto')
 // const bodyParser = require("body-parser"); /* deprecated */
 const cors = require("cors");
 const app = express();
@@ -119,6 +121,33 @@ app.get("/", (req, res) => {
 //     .then(notification => console.log(notification.sid))
 //     .catch(error => console.log(error));
 });
+const xero_webhook_key = 'hOeovSMvxmfdID64oWFHykR5V9ndJeym5l3IPe5Zm5c+yQN3hDz5BfyhoF9YVadKQEm9I7Wtq9SeYAhxYHLxCg==';
+var options = {
+  type: 'application/json'
+};
+var itrBodyParser = bodyParser.raw(options)
+app.post('/webhook', itrBodyParser, function (req, res) {
+
+  const reSign = req.headers['x-xero-signature'];
+  console.log(req.headers['x-xero-signature']);
+  console.log('::::::::');
+  console.log(req.body);
+     console.log("Body: "+JSON.stringify(req.body))
+     console.log(req.body.toString());
+     console.log("Xero Signature: "+ reSign);
+     console.log('Server key::::',xero_webhook_key);
+     // Create our HMAC hash of the body, using our webhooks key
+     let hmac = crypto.createHmac("sha256", xero_webhook_key).update(req.body.toString()).digest('base64');
+     console.log("Resp Signature: ",hmac)
+ 
+     if (req.headers['x-xero-signature'] == hmac) {
+         res.statusCode = 200
+     } else {
+         res.statusCode = 401
+     }
+     console.log("Response Code: "+res.statusCode)
+     return res.send();
+})
 //const db = require("./app/models");
 const Imports = db.imports;
 
@@ -368,25 +397,18 @@ require("./app/routes/columns.routes")(app);
 require("./app/routes/messages.routes")(app);
 require("./app/routes/emailnotification.routes")(app);
 require("./app/routes/dashboard.routes")(app);
-require("./app/routes/state.routes")(app);
-require("./app/routes/city.routes")(app);
 require("./app/routes/customer.routes")(app);
+require("./app/routes/agent.routes")(app);
 require("./app/routes/enquiry.routes")(app);
-require("./app/routes/suppliers.routes")(app);
-require("./app/routes/categories.routes")(app);
-require("./app/routes/products.routes")(app);
-require("./app/routes/billingrates.routes")(app);
 require("./app/routes/taxes.routes")(app);
-require("./app/routes/kits.routes")(app);
-require("./app/routes/purchases.routes")(app);
 require("./app/routes/quotes.routes")(app);
 require("./app/routes/invoices.routes")(app);
 require("./app/routes/jobs.routes")(app);
-require("./app/routes/connections.routes")(app);
-require("./app/routes/docthemes.routes")(app);
 require("./app/routes/tradie.routes")(app);
 require("./app/routes/tradielogin.routes")(app);
 require("./app/routes/inbox.routes")(app);
+require("./app/routes/notes.routes")(app);
+require("./app/routes/mailbox.routes")(app);
 
 //The 404 Route (ALWAYS Keep this as the last route)
 app.get('*', function(req, res){

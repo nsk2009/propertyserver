@@ -58,6 +58,7 @@ exports.login = async (req, res, next) => {
 						zone: set.timezone,
 						username: data.username,
 						name: data.name,
+						company: data.company,
 						photo: data.photo,
 						showcolumns: data.columns,
 						email: data.email,

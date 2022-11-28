@@ -7,7 +7,7 @@ const { authJwt } = require("../middleware");
 
   // Create a new record
   //router.post("/", upload.fields([{name: "photo", maxCount: 1},{name: "photos", maxCount: 1}]), control.create);
-  router.post("/", upload.single("photo"), control.create);
+  router.post("/", [authJwt.verifyToken], control.create);
 
   // Retrieve all records
   router.get("/notes/:id", [authJwt.verifyToken], control.findAll);

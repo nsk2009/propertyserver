@@ -79,18 +79,20 @@ const options1 = {
 };
 	var ip = await rp(options1);
 	var device = session.isMobile ? 'Mobile' : 'Desktop/Laptop';
-	session.date = datetime;
-	session.result = ip;//results[0];
-	session.message = message;
-	session.device = device;
-	session.icon = icon;
+	var style = {};
+	style.date = datetime;
+	style.result = ip;//results[0];
+	style.message = message;
+	style.device = device;
+	style.icon = icon;
 //		const data = datetime+'#'+results[0]+'#'+message+ '#' +session.browser+ '#' +session.version+ '#' + device + '#' +session.os+ '#'+session.platform +'#'+ icon + "\n"
-	
-	fs.writeFile('./activities/'+type+'/'+user+'/'+year+'/'+month+'/'+date+'.txt', JSON.stringify(session)+',', {flag: 'a+'}, (err) => {
-		if (err) {
-			throw err;
-		}
-	});
+	if(message){
+		fs.writeFile('./activities/'+type+'/'+user+'/'+year+'/'+month+'/'+date+'.txt', JSON.stringify(style)+',', {flag: 'a+'}, (err) => {
+			if (err) {
+				throw err;
+			}
+		});
+	}
 
 };
 

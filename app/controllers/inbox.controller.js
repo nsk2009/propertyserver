@@ -2,6 +2,7 @@ const db = require("../models");
 var sessionstorage = require('sessionstorage');
 const Admin = db.adminusers;
 const Settings = db.settings;
+const Mail = db.mailbox;
 const EmailApi = db.emailapi;
 const Table = db.inbox;
 const Imap = require('imap');
@@ -23,12 +24,11 @@ const emailapi_id = '628f4d007abca8d1c3471a17';
 // Retrieve all records from the database.
 exports.syncMails = async (req, res) => {
    // console.log('bug found')
-	var emailapis= await EmailApi.findById(emailapi_id);
+	var emailapis= await Mail.findOne({default: 1});
 	var set = await Settings.findById(set_id);
-	var email =  emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username;
 	const imap = new Imap({
-		user: emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username,
-		password: emailapis.gmail_type==='Live' ? emailapis.live_gmail_password : emailapis.sand_gmail_password,
+		user: emailapis.email,
+		password: emailapis.password,
 		host: 'imap.gmail.com',
 		port: 993,
 		tls: true,
@@ -90,7 +90,7 @@ exports.syncMails = async (req, res) => {
 		};
 	}
 	//['SUBJECT', 'Give Subject Here']]
-	imap.once('ready', function() {
+	imap.once('ready', function() { 
 		var fs = require('fs'), fileStream;
 		openInbox(async(err, box) =>{
 			if (err) throw err;
@@ -98,7 +98,7 @@ exports.syncMails = async (req, res) => {
 			//   if (err) throw err; 
 			// var f = imap.fetch(results, { bodies: '' });
 			//var f = imap.seq.fetch(data.uid +':'+data.uid, { bodies: '', struct: true });
-			var f = imap.seq.fetch(set.inbox_count + ':*', { bodies: '', struct: true });
+			var f = imap.seq.fetch(emailapis.mail + ':*', { bodies: '', struct: true });
 			f.on('message', async(msg, seqno)=> {
 				//console.log('Message #%d', seqno);
 				var prefix = '(#' + seqno + ') ';
@@ -108,7 +108,7 @@ exports.syncMails = async (req, res) => {
 						//console.log('item set:', sessionstorage.getItem('attachments'));
 						var data = {};
 						data.subject= mail.subject;
-						data.email= email;
+						data.email= emailapis.email;
 						data.from= mail.from ? mail.from.text : '';
 						data.date= mail.date;
 						data.html= mail.html;
@@ -119,7 +119,7 @@ exports.syncMails = async (req, res) => {
 							sessionstorage.clear('attachments')
 						}
 						await Table.create(data);
-						await Settings.findByIdAndUpdate(set_id, {inbox_count : parseInt(seqno)+1}, {useFindAndModify:false});  
+						await Mail.findByIdAndUpdate(emailapis.id, {mail : parseInt(seqno)+1}, {useFindAndModify:false});  
 					});
 				});
 				msg.once('attributes', async function(attrs) {
@@ -398,8 +398,8 @@ exports.download = async (req, res) => {
 
 // Retrieve all records from the database.
 exports.findAll = async(req, res) => {
-    const { page, size, search, field, dir, status, show } = req.query;
-    var emailapis= await EmailApi.findById(emailapi_id);
+    const { page, size, search, field, dir, status, mail } = req.query;
+    var emailapis= await Mail.findOne({default: 1});
     var sortObject = {};
     sortObject.date=-1;
     if(search){
@@ -407,9 +407,9 @@ exports.findAll = async(req, res) => {
     }
     else
     var condition = {};
-   condition.email = emailapis.gmail_type==='Live' ? emailapis.live_gmail_username : emailapis.sand_gmail_username;
+    //condition.email = emailapis.email;
     condition.viewstatus = status ? status : { $ne : 'Trash'};
-    if(show) condition.show = show;
+    condition.email = mail ? mail : emailapis.email;
   
     sortObject[field] = dir;
     const { limit, offset } = getPagination(page, size);

@@ -7,6 +7,8 @@ module.exports = (mongoose, mongoosePaginate) => {
       email: String,
       uid:String,
       phone: String,
+      source: String,
+      others: String,
       address : String,
       tradie : Array,
       responsed_tradies : Array,
@@ -28,6 +30,14 @@ module.exports = (mongoose, mongoosePaginate) => {
         type: mongoose.Schema.Types.ObjectId,
         ref: "customer"
       },
+		agent:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "agent"
+		},
+		tenant:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "tenant"
+		},
       quote: {
         type: String,
         enum: ['yes', 'no'],
@@ -38,11 +48,16 @@ module.exports = (mongoose, mongoosePaginate) => {
         enum: ['yes', 'no'],
         default: 'no'
       },
+		usertype: {
+			type: String,
+			enum : ['customer','agent'],
+			default: 'customer'
+		}, 
       photo: String,
       status: {
         type: String,
-        enum: ['Active', 'Inactive', 'Trash'],
-        default: 'Active'
+		enum : ['New','Quote Requested','Moved to Quote', 'Moved to Job'],
+		default: 'New'
       },
       createdBy: {
         type: mongoose.Schema.Types.ObjectId,

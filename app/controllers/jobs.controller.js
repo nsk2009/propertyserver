@@ -6,6 +6,7 @@ const Quote = db.quotes;
 const Enquiry = db.enquiry;
 const Setting = db.settings;
 const Inbox = db.inbox;
+const Note = db.notes;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 var sprintf = require('sprintf-js').sprintf;
@@ -41,7 +42,10 @@ exports.create = async(req, res) => {
 				res.status(404).send({ message: ms.messages[0].message});
 			  } else {
           if(req.body.quote){
-            await Quote.findByIdAndUpdate(req.body.quote, {movedtojob:1}, {useFindAndModify:false});
+            await Quote.findByIdAndUpdate(req.body.quote, {status:'Moved to Job'}, {useFindAndModify:false});
+          }
+          if(req.body.enquiry){
+            await Enquiry.findByIdAndUpdate(req.body.enquiry, {status:'Moved to Job'}, {useFindAndModify:false});
           }
           activity(req.body.uid+' module. '+ms.messages[2].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
 		  await Setting.findByIdAndUpdate(settings_id, { job: set.job + 1 }, { useFindAndModify: false }); 
@@ -111,6 +115,7 @@ exports.autoload = async (req, res) => {
   const email = await CustNotifi.find({ user: id }).limit(Number(page3)).populate(['createdBy']).sort({ _id: -1 });
   const calls = await Calls.find({ customer_id: id }).limit(Number(page2)).populate(['createdBy']).sort({ _id: -1 });*/
   //const invoices = await Invoice.find({ job: id});
+  const notes = await Note.find({ job: id}).sort({ _id: -1 }).populate('createdBy');
   const mails = await Inbox.find({ job: id}).sort({ _id: -1 });
   const invoice = await Invoice.findOne({ job: id});
   const details = await Table.findOne({ _id: id})
@@ -123,6 +128,7 @@ exports.autoload = async (req, res) => {
     mails: mails,
     invoice: invoice,
     details: details,
+    notes: notes,
   });
 };
 
@@ -229,9 +235,11 @@ exports.makeinvoice = async(req, res) => {
   info.taxid = data.taxid;
   info.taxname = data.taxname;
   info.tax = data.tax;
+  info.description = data.description;
+  //info.terms = data.terms;
   info.createdBy = req.headers["user"];
   var inv = await Invoice.create(info);
-  await Table.findByIdAndUpdate(id, { invoice: 1 }, { useFindAndModify: false }); 
+  await Table.findByIdAndUpdate(id, { invoice: 1, status: 'To Invoice' }, { useFindAndModify: false }); 
   await Setting.findByIdAndUpdate(settings_id, { invoice: set.invoice + 1 }, { useFindAndModify: false }); 
   res.send({ message: "Job has beeen successfully convert as invoice", id: inv.id});
 };
@@ -241,7 +249,7 @@ exports.quote = async(req, res) => {
   const id = req.params.id;
   var data = await Enquiry.findById(id);
   if(data){ 
-	res.send({type: '1', enqid: data.uid, enquiry: data.id, quote:0, customer: data.customer, address: data.address, description: data.description, items: []});
+	res.send({type: '1', enqid: data.uid, enquiry: data.id, quote:0, customer: data.customer, title:data.title,  address: data.jobaddress, description: data.description, items: []});
   }
   else{
 	data = await Quote.findById(id);

@@ -4,6 +4,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 		title: String,
 		address: String,
 		startdate: String,
+		duedate: String,
 		enquiry:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "enquiry"
@@ -15,6 +16,14 @@ module.exports = (mongoose, mongoosePaginate) => {
 		customer:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "customer"
+		},
+		agent:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "agent"
+		},
+		tenant:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "tenant"
 		},
 		tradie:  {
 			type: mongoose.Schema.Types.ObjectId,
@@ -49,10 +58,15 @@ module.exports = (mongoose, mongoosePaginate) => {
 			type: Number,
 			default: 0
 		},
+		usertype: {
+			type: String,
+			enum : ['customer','agent'],
+			default: 'customer'
+		}, 
 		status: {
 			type: String,
-			enum : ['Active','Inactive','Trash'],
-			default: 'Active'
+			enum : ['New','In Progress','To Invoice','Awaiting Payment','Complete'],
+			default: 'New'
 		}, 	
 		createdBy: {
 			type: mongoose.Schema.Types.ObjectId,

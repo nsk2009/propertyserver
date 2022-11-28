@@ -4,6 +4,7 @@ const Admin = db.adminusers;
 const Setting = db.settings;
 const TradieTable = db.tradie;
 const enquiryTable = db.enquiry;
+const Note = db.notes;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 var sprintf = require('sprintf-js').sprintf;
@@ -76,6 +77,11 @@ exports.create = async(req, res) => {
 exports.findAll = async(req, res) => {
   const { page, size, search, field, dir, status, show, tradie } = req.query;
   var sortObject = {};
+  var admins = [];
+  var ads = await Admin.find({ status : { $ne : 'Trash'}});
+  ads.forEach((e)=>{
+	admins.push(e._id);
+  });
   if(search){
   var users = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }
   }, {lastname: { $regex: new RegExp(search), $options: "i" }}]});
@@ -83,18 +89,22 @@ exports.findAll = async(req, res) => {
 	  users.forEach(function (doc, err) {
 		info1.push(doc._id);
 	  });
-  var condition = { $or: [{ name: { $regex: new RegExp(search), $options: "i" }}, { abbreviation: { $regex: new RegExp(search), $options: "i" }}, { modifiedBy: { $in: info1 } }, { createdBy: { $in: info1 } } ]};
+  if(tradie){
+  var condition = { $or: [{ uid: { $regex: new RegExp(search), $options: "i" }}, { abbreviation: { $regex: new RegExp(search), $options: "i" }}, { modifiedBy: { $in: info1 } }, { createdBy: { $in: info1 } }]};
+	   condition.tradie = tradie;
   }
   else
-  condition = {};
-
+  var condition = { $or: [{ uid: { $regex: new RegExp(search), $options: "i" }}, { abbreviation: { $regex: new RegExp(search), $options: "i" }}, { modifiedBy: { $in: info1 } }, { createdBy: { $in: info1 } },  { createdBy: { $in: admins } }, {status:{$ne:'Draft'}} ]};
+  }
+  else{
+	if(tradie){
+	var condition = { };
+	   condition.tradie = tradie;
+	}
+	else
+    var condition = { $or: [ { createdBy: { $in: admins } }, {status:{$ne:'Draft'}} ]};
+  }
   condition.status = status ? status : { $ne : 'Trash'};
-  if(show) condition.show = show;
-  if(tradie) condition.tradie = tradie;
-//   else {
-// 	condition.createdBy= { $ne : null};
-// 	condition.status= { $ne : 'Pending'};
-// }
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
@@ -203,9 +213,29 @@ exports.findOne = async(req, res) => {
     });
 };
 
+// Find a single record with an id
+exports.details = async(req, res) => {
+  const id = req.params.id;
+  var ms = await msg('quotes');
+  const notes = await Note.find({ quote: id}).sort({ _id: -1 }).populate('createdBy');
+  Table.findById(id)
+    .populate('createdBy')
+    .populate('modifiedBy')
+    .populate('customer')
+    .then((data) => {
+      if (!data)
+      res.status(404).send({ message: "OK"});
+      else res.send({data: data, notes: notes});
+    })
+    .catch((err) => {
+      res.status(500).send({ message: "Invalid quote id"});
+    });
+};
+
 // approve a quote
 exports.approve = async(req, res) => {
 	const id = req.params.id;
+	const status = req.params.status;
 	var ms = await msg('quotes');
 	Table.findById(id)
 	  .populate('createdBy')
@@ -215,12 +245,12 @@ exports.approve = async(req, res) => {
 		if (!data)
 		res.status(404).send({ message: "OK"});
 		else {
-			await Table.updateMany({enquiry:data.enquiry}, {status:"Declined"}, {useFindAndModify:false});
-			await Table.findByIdAndUpdate(id, {status:"Approved"}, {useFindAndModify:false});
-			await enquiryTable.findByIdAndUpdate(data.enquiry, {movedtoquote:1}, {useFindAndModify:false});
+			//if(data.enquiry) await Table.updateMany({enquiry:data.enquiry}, {status:"Declined"}, {useFindAndModify:false});
+			await Table.findByIdAndUpdate(id, {status:status,tstatus:status}, {useFindAndModify:false});
+			//if(data.enquiry)  await enquiryTable.findByIdAndUpdate(data.enquiry, {movedtoquote:1}, {useFindAndModify:false});
 			if(data.tradie){
 				const tradieDet = await TradieTable.findById(data.tradie);
-			await email('63786d08b055c0628e7e32d3', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${cmsLink}`, '{quote}':data.uid});
+				await email('63786d08b055c0628e7e32d3', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${cmsLink}`, '{quote}':data.uid});
 			}
 			res.send({message:"Quote has been approved successfully"});
 		}
@@ -428,7 +458,7 @@ exports.generatePdf = async(req, res) => {
   });
   };
   // Send a quote to the customer
-exports.sendQuoteToCustomer = async(req, res) => {
+  exports.sendQuoteToCustomer = async(req, res) => {
 	const id = req.params.id;
 	var ms = await msg('quotes');
 	Table.findById(id)
@@ -440,7 +470,8 @@ exports.sendQuoteToCustomer = async(req, res) => {
 		res.status(404).send({ message: "OK"});
 		else {
 			//const text = await gethtml.quotehtml();
-			await email('6378b084b055c0628e7e32d9', 'admin', {'{name}': data.customer.firstname, '{email}': data.customer.email, '{link}': `${cmsLink}`, '{attachment}':'https://salesplanner.org/demo/property/server/uploads/1663415591197-stock-photo-1052601383.jpg'});
+			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Awaiting Client Approval', tstatus: 'Awaiting Client Approval'}, {useFindAndModify:false});
+			await email('6378b084b055c0628e7e32d9', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': data.customer.email, '{link}': `${cmsLink}`, '{attachment}':'https://salesplanner.org/demo/property/server/uploads/1663415591197-stock-photo-1052601383.jpg'});
 			await Table.findByIdAndUpdate(id, {senttocustomer:1}, {useFindAndModify:false});
 			res.send({message:"Quote has been sent to customer!"});
 		}
@@ -450,4 +481,25 @@ exports.sendQuoteToCustomer = async(req, res) => {
 	  });
   };
   
+    // Send a quote to the Admin
+exports.sendToAdmin = async(req, res) => {
+	const id = req.params.id;
+	var ms = await msg('quotes');
+	Table.findById(id)
+	  .then(async(data) => {
+		if (!data)
+		res.status(404).send({ message: "OK"});
+		else {
+			const admin = await Admin.findById('61efce935f2e3c054819a02f');
+			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Pending', tstatus: 'Sent to Admin'}, {useFindAndModify:false});
+			//const text = await gethtml.quotehtml();
+			 await email('637b213d7ad1f431a8cdbad7', 'admin', {'{email}': admin.email, '{subject}':req.body.subject, '{description}':req.body.message, '{link}': `${cmsLink}quotes/view/${id}`});
+			// await Table.findByIdAndUpdate(id, {senttocustomer:1}, {useFindAndModify:false});
+			res.send({message:"Quote has been sent to admin successfully!"});
+		}
+	  })
+	  .catch((err) => {
+		res.status(500).send({ message: "Invalid quote id"});
+	  });
+  };
   
