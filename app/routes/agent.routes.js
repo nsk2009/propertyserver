@@ -17,6 +17,9 @@ module.exports = app => {
    // Retrieve all records
    router.get("/list", [authJwt.verifyToken], control.findList);
 
+   // Retrieve all records
+   router.get("/tenantlist/:id", [authJwt.verifyToken], control.findTenantList);
+
   // Retrieve all trash records
   //router.get("/trashall", [authJwt.verifyToken], control.trashAll);
 
@@ -46,9 +49,6 @@ module.exports = app => {
 
   // Update a record with id
   router.post("/:id", upload.single("photo"), control.update);
-
-  // Update a columns with id
-  router.post("/columns/:id", control.updateColumns);
 
   // Delete a record with id
   router.delete("/:id", [authJwt.verifyToken], control.delete);

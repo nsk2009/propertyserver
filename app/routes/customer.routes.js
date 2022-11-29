@@ -37,9 +37,6 @@ module.exports = app => {
   // Update a record with id
   router.post("/:id", upload.single("photo"), control.update);
 
-  // Update a columns with id
-  router.post("/columns/:id", control.updateColumns);
-
   // Delete a record with id
   router.delete("/:id", [authJwt.verifyToken], control.delete);
 

@@ -199,6 +199,20 @@ exports.findList = async(req, res) => {
 		res.status(500).send({ message: ms.messages[3].message });
 	  });
   };
+  // Find a single record with an id
+exports.findTenantList = async(req, res) => {
+	const id = req.params.id;
+	var ms = await msg('Agent');
+	Tenant.find({agent: id})
+	  .then((data) => {
+		if (!data)
+		  res.status(404).send({ message: ms.messages[3].message });
+		else res.send({list:data});
+	  })
+	  .catch((err) => {
+		res.status(500).send({ message: ms.messages[3].message });
+	  });
+  };
   
   // Update all records from the database.
   exports.updateAll = async(req, res) => {
@@ -299,24 +313,6 @@ exports.updatetenant = async(req, res) => {
 	  res.status(500).send({ message: ms.messages[4].message });
 	});
 		  
-  };
-  
-  exports.updateColumns = async(req, res) => {
-	var ms = await msg('Agent');
-  const id = req.params.id;
-	Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-	.then((data) => {
-	  if (!data) {
-	  res.status(404).send({ message: ms.messages[3].message});
-	  } else{
-		activity('Lead columns updated successfully', req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
-		res.send({ message: ms.messages[6].message });
-	}
-	})
-	.catch((err) => {
-	  res.status(500).send({ message: ms.messages[3].message });
-	});
-  
   };
   
   // Delete a record with the specified id in the request

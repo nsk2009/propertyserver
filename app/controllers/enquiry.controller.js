@@ -67,10 +67,11 @@ exports.findAll = async(req, res) => {
   const crby = ({path: 'createdBy', select: {'firstname': 1, 'lastname': 1}});
   const mfby = {path: 'modifiedBy', select: {'firstname': 1, 'lastname': 1}}; 
   const cust = {path: 'customer', select: {'firstname': 1, 'lastname': 1}}; 
+  const agent = {path: 'agent', select: {'name': 1, 'company': 1}};
   
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
-  Table.paginate(condition, { collation: { locale: "en" }, populate: [crby, mfby, cust], offset, limit, sort: sortObject })
+  Table.paginate(condition, { collation: { locale: "en" }, populate: [crby, mfby, cust, agent], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
         totalItems: data.totalDocs,
@@ -208,21 +209,6 @@ exports.profilepic = async(req, res) => {
 	.catch((err) => {
       res.status(500).send({ message: ms.messages[8].message});
 	});
-};
-
-exports.updateColumns = async(req, res) => {  
-  var ms = await msg('enquiry');
-const id = req.params.id;
-  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-  .then((data) => {
-    if (!data) {
-    res.status(404).send({ message: ms.messages[8].message});
-    } else res.send({ message: "Column settings has been successfully updated." });
-  })
-  .catch((err) => {
-      res.status(500).send({ message: "Oops! Columns can't be updated"});
-  });
-
 };
 
 // Delete a record with the specified id in the request

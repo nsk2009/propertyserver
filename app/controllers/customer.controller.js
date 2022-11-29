@@ -210,22 +210,6 @@ exports.findList = async(req, res) => {
 		.catch((err) => {
 		  res.status(500).send({ message: ms.messages[3].message });		  
 	  });
-  };exports.updateColumns = async(req, res) => {
-	var ms = await msg('Customer');
-  const id = req.params.id;
-	Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-	.then((data) => {
-	  if (!data) {
-	  res.status(404).send({ message: ms.messages[3].message});
-	  } else{
-		activity('Lead columns updated successfully', req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
-		res.send({ message: ms.messages[6].message });
-	}
-	})
-	.catch((err) => {
-	  res.status(500).send({ message: ms.messages[3].message });
-	});
-  
   };
   
   // Delete a record with the specified id in the request

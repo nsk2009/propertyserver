@@ -24,6 +24,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 		expiry_date: String,
 		reference: String,
 		doc_theme: String,
+		title: String,
 		description: String,
 		subtotal: String,
 		grosstotal: String,

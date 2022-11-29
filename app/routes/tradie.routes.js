@@ -43,9 +43,6 @@ module.exports = app => {
   // Update a record with id
   router.post("/:id",upload.fields([{name:"bcertificate",maxCount:1},{name:"lcertificate",maxCount:1}]), control.update);
 
-  // Update a columns with id
-  router.post("/columns/:id", control.updateColumns);
-
   // Delete a record with id
   router.delete("/:id", [authJwt.verifyToken], control.delete);
 

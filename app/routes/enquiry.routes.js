@@ -48,9 +48,6 @@ const { authJwt } = require("../middleware");
   // Update a record with id
   router.post("/profilepic/:id", upload.single("profilepic"), control.profilepic);
 
-  // Update a columns with id
-  router.post("/columns/:id", control.updateColumns);
-
   // Delete a record with id
   router.delete("/:id", [authJwt.verifyToken], control.delete);
 

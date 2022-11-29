@@ -108,7 +108,7 @@ exports.findAll = async(req, res) => {
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
-  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer', 'tradie', 'enquiry'], offset, limit, sort: sortObject })
+  Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer', 'agent', 'tradie', 'enquiry'], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
         totalItems: data.totalDocs,
@@ -203,6 +203,8 @@ exports.findOne = async(req, res) => {
     .populate('createdBy')
     .populate('modifiedBy')
     .populate('customer')
+    .populate('agent')
+    .populate('tenant')
     .then((data) => {
       if (!data)
       res.status(404).send({ message: "OK"});
@@ -222,6 +224,8 @@ exports.details = async(req, res) => {
     .populate('createdBy')
     .populate('modifiedBy')
     .populate('customer')
+    .populate('agent')
+    .populate('tenant')
     .then((data) => {
       if (!data)
       res.status(404).send({ message: "OK"});
