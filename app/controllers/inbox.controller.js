@@ -409,7 +409,9 @@ exports.findAll = async(req, res) => {
     var condition = {};
     //condition.email = emailapis.email;
     condition.viewstatus = status ? status : { $ne : 'Trash'};
-    condition.email = mail ? mail : emailapis.email;
+	if(mail)
+		condition.email = mail;
+    //condition.email = mail ? mail : emailapis.email;
   
     sortObject[field] = dir;
     const { limit, offset } = getPagination(page, size);

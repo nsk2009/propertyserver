@@ -121,6 +121,8 @@ exports.findOne = async(req, res) => {
     .populate('createdBy')
     .populate('modifiedBy')
     .populate('customer')
+    .populate('agent')
+    .populate('tenant')
     .then((data) => {
       if (!data)
       res.status(404).send({ message: ms.messages[8].message});

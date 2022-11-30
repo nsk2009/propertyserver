@@ -41,8 +41,8 @@ module.exports = (mongoose, mongoosePaginate) => {
 		description: String,
 		status: {
 			type: String,
-			enum : ['Active','Inactive','Trash'],
-			default: 'Active'
+			enum : ['Draft','Awaiting Payment','Complete'],
+			default: 'Draft'
 		}, 	
 		createdBy: {
 			type: mongoose.Schema.Types.ObjectId,

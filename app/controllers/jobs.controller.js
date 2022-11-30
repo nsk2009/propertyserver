@@ -122,6 +122,8 @@ exports.autoload = async (req, res) => {
     .populate('createdBy')
     .populate('modifiedBy')
     .populate('customer')
+    .populate('agent')
+    .populate('tenant')
     .populate('quote')
     .populate('tradie');
   res.send({
@@ -198,6 +200,8 @@ exports.findOne = async(req, res) => {
     .populate('createdBy')
     .populate('modifiedBy')
     .populate('customer')
+    .populate('agent')
+    .populate('tenant')
     .populate('quote')
     .populate('tradie')
     .then((data) => {
@@ -244,6 +248,7 @@ exports.makeinvoice = async(req, res) => {
   res.send({ message: "Job has beeen successfully convert as invoice", id: inv.id});
 };
 
+
 // Find a single record with an id
 exports.quote = async(req, res) => {
   const id = req.params.id;
@@ -253,7 +258,7 @@ exports.quote = async(req, res) => {
   }
   else{
 	data = await Quote.findById(id);
-	res.send({type: '0', enqid: data.uid, enquiry: data.enquiry, quote: data.id, customer: data.customer, address: '', description: data.description, subtotal:data.subtotal, items: data.items, tax: data.tax, discount: data.discount, distype: data.distype, tradie:data.tradie});
+	res.send({type: '0', enqid: data.uid, enquiry: data.enquiry, quote: data.id, customer: data.customer, title:data.title, address: '', description: data.description, subtotal:data.subtotal, items: data.items, tax: data.tax, discount: data.discount, distype: data.distype, tradie:data.tradie});
   }
 };
 
