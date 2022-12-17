@@ -362,12 +362,12 @@ exports.revise = async(req, res) => {
 		  history.push(info);
 		  req.body.history = history;
 		  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-			.then((data) => {
+			.then(async (data) => {
 			  if (!data) {
 				res.status(404).send({ message: ms.messages[3].message + err});
 			  }
 			  else {
-				  generatePdf(id);
+				await generatePdf(id);
 				activity(ms.messages[2].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
 				  res.send({ message: ms.messages[2].message });
 			  }
@@ -441,7 +441,7 @@ exports.restore = async(req, res) => {
 };
 // var html = "<!DOCTYPE html> <html>  <head>	<meta charset='utf-8' /><title>Hello world!</title>  </head>  <body>	<h1>User List</h1><ul>{{#each users}}<li>Name: {{this.name}}</li><li>Age: {{this.age}}</li><br />{{/each}}</ul></body></html>"
 // Find a single record with an id
-generatePdf = async(id) => {
+const generatePdf = async(id) => {
 	var data= await gethtml.quotehtml(id);
 	var foot= await gethtml.quotefooter();
 	var header= await gethtml.pdfheader();

@@ -261,7 +261,7 @@ exports.update = async(req, res) => {
 	}
 };
 
-generatePdf = async(id) => {
+const generatePdf = async(id) => {
 	var data= await gethtml.invoicehtml(id);
 	var foot= await gethtml.quotefooter();
 	var header= await gethtml.pdfheader();

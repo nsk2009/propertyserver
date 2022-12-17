@@ -133,7 +133,6 @@ const quotehtml = async(id) => {
 	  return (data);
 };
 
-
 const invoicehtml = async(id) => {    
 	var record = await Invoice.findById(id).populate('customer').populate('agent');
    if(record){
