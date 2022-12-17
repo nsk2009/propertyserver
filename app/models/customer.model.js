@@ -12,6 +12,7 @@ module.exports = (mongoose, mongoosePaginate) => {
       lng: String,
       photo: String,
       uid:String,
+      xero:String,
       status: {
         type: String,
         enum: ['Active', 'Inactive', 'Trash'],

@@ -5,20 +5,19 @@ const Setting = db.settings;
 const TradieTable = db.tradie;
 const enquiryTable = db.enquiry;
 const Note = db.notes;
+const Inbox = db.inbox;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 var sprintf = require('sprintf-js').sprintf;
 const settings_id = '6275f6aae272a53cd6908c8d';
 //Required package
-var pdf = require("pdf-creator-node");
+//var pdf = require("pdf-creator-node");
+const puppeteer = require("puppeteer");
 var juice = require('juice');
-var fs = require("fs");
 const email = require("../middleware/email");
 const gethtml = require("../middleware/pdfhtml");
-var css = fs.readFileSync("quote.css", "utf8");
-	
-// Read HTML Template
-// var html = fs.readFileSync("template.html", "utf8");
+var fs = require("fs"); 
+var css = fs.readFileSync("./css/quote.css", "utf8");
 
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
@@ -58,6 +57,7 @@ exports.create = async(req, res) => {
 					responsed_tradies.push(req.body.tradie);
 					await enquiryTable.findByIdAndUpdate(req.body.enquiry, {responsed_tradies:responsed_tradies}, {useFindAndModify:false});
 				}
+				generatePdf(data._id);
           activity(req.body.name+' module. '+ms.messages[0].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
 		  await Setting.findByIdAndUpdate(settings_id, { quotes: set.quotes + 1 }, { useFindAndModify: false }); 
 		  res.send({ message: ms.messages[0].message, id: data._id });
@@ -156,7 +156,7 @@ exports.findList = async(req, res) => {
 // Retrieve all state records from the database.
 exports.findCusList = async(req, res) => {
   const id = req.params.id;
-	const { status } = req.query;
+	/*const { status } = req.query;
 	Table.find({customer: id, status: "Approved"})
   .sort({name: 1})
     .then((data) => {
@@ -164,7 +164,16 @@ exports.findCusList = async(req, res) => {
     })
     .catch((err) => {
 		res.send(err);
-    });
+    });*/
+	
+  var data = await Table.find({usertype: 'customer', customer: id, status: "Approved"});
+  if(data.length > 0){ 
+	res.send({list: data});
+  }
+  else{
+	var data = await Table.find({usertype: 'agent', agent: id, status: "Approved"});
+	res.send({list: data});
+  }
 };
 
 // Retrieve all records from the database.
@@ -220,16 +229,19 @@ exports.details = async(req, res) => {
   const id = req.params.id;
   var ms = await msg('quotes');
   const notes = await Note.find({ quote: id}).sort({ _id: -1 }).populate('createdBy');
+  const mails = await Inbox.find({ quote: id}).sort({ _id: -1 });
   Table.findById(id)
     .populate('createdBy')
     .populate('modifiedBy')
     .populate('customer')
     .populate('agent')
     .populate('tenant')
+    .populate('enquiry')
+    .populate('tradie')
     .then((data) => {
       if (!data)
       res.status(404).send({ message: "OK"});
-      else res.send({data: data, notes: notes});
+      else res.send({data: data, notes: notes, mails: mails});
     })
     .catch((err) => {
       res.status(500).send({ message: "Invalid quote id"});
@@ -254,9 +266,14 @@ exports.approve = async(req, res) => {
 			//if(data.enquiry)  await enquiryTable.findByIdAndUpdate(data.enquiry, {movedtoquote:1}, {useFindAndModify:false});
 			if(data.tradie){
 				const tradieDet = await TradieTable.findById(data.tradie);
-				await email('63786d08b055c0628e7e32d3', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${cmsLink}`, '{quote}':data.uid});
+				if(status === 'Approved')
+					await email('63786d08b055c0628e7e32d3', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid});
+				else if(status === 'Declined')
+					await email('6392fc2ce7f0f032633fa2c5', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid});
+				else if(status === 'Revise')
+					await email('6392fc3de7f0f032633fa2c6', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid});
 			}
-			res.send({message:"Quote has been approved successfully"});
+			res.send({message:"Quote has been "+status+" successfully"});
 		}
 	  })
 	  .catch((err) => {
@@ -286,6 +303,7 @@ exports.update = async(req, res) => {
 				res.status(404).send({ message: ms.messages[3].message + err});
 			  }
 			  else {
+				  generatePdf(id);
 				activity(ms.messages[2].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
 				  res.send({ message: ms.messages[2].message });
 			  }
@@ -349,6 +367,7 @@ exports.revise = async(req, res) => {
 				res.status(404).send({ message: ms.messages[3].message + err});
 			  }
 			  else {
+				  generatePdf(id);
 				activity(ms.messages[2].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
 				  res.send({ message: ms.messages[2].message });
 			  }
@@ -422,47 +441,31 @@ exports.restore = async(req, res) => {
 };
 // var html = "<!DOCTYPE html> <html>  <head>	<meta charset='utf-8' /><title>Hello world!</title>  </head>  <body>	<h1>User List</h1><ul>{{#each users}}<li>Name: {{this.name}}</li><li>Age: {{this.age}}</li><br />{{/each}}</ul></body></html>"
 // Find a single record with an id
-exports.generatePdf = async(req, res) => {
-	const {id, html} = req.body;
-	var content = juice(`<style>${css}</style>${html}`);	
-	var options = {
-        format: "A4",
-        orientation: "portrait",
-        border: "1mm",
-        header: {
-            height: "40mm",
-            contents: '<div style="text-align: center;"><img src="https://salesplanner.org/demo/property/server/uploads/1664349489012-logo_.png" alt="logo" /></div>'
-        },
-        footer: {
-            height: "5mm",
-            contents: {
-                first: 'Cover page',
-                default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-                last: 'Last Page'
-            }
-        }
-    };
+generatePdf = async(id) => {
+	var data= await gethtml.quotehtml(id);
+	var foot= await gethtml.quotefooter();
+	var header= await gethtml.pdfheader();
+	const browser = await puppeteer.launch({headless:true});
 
-
-	  var document = {
-		html: content,
-		data: {
-		  
-		},
-		path: `./invoices/${id}.pdf`,
-		type: "",
-	  };
-	pdf
-  .create(document, options)
-  .then((data) => {
-	res.send(data.filename);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-  };
-  // Send a quote to the customer
-  exports.sendQuoteToCustomer = async(req, res) => {
+	const page = await browser.newPage();  
+	
+	await page.setContent(`<style>${css}</style>${data}`, { waitUntil: ['domcontentloaded', 'networkidle2'] });
+	await page.pdf({
+		path: `./quotes/${id}.pdf`,
+		format: "A4",
+		displayHeaderFooter:true,
+		headerTemplate: header,
+		footerTemplate: foot,
+		printBackground : true,
+		preferCSSPageSize: false,
+		margin : {top: "140px", bottom : "40px"} 
+	} ); 
+	await browser.close();
+	//res.send(`${id}.pdf`); 
+	return 'generated';
+};
+// Send a quote to the customer
+exports.sendQuoteToCustomer = async(req, res) => {
 	const id = req.params.id;
 	var ms = await msg('quotes');
 	Table.findById(id)
@@ -474,9 +477,8 @@ exports.generatePdf = async(req, res) => {
 		res.status(404).send({ message: "OK"});
 		else {
 			//const text = await gethtml.quotehtml();
-			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Awaiting Client Approval', tstatus: 'Awaiting Client Approval'}, {useFindAndModify:false});
-			await email('6378b084b055c0628e7e32d9', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': data.customer.email, '{link}': `${cmsLink}`, '{attachment}':'https://salesplanner.org/demo/property/server/uploads/1663415591197-stock-photo-1052601383.jpg'});
-			await Table.findByIdAndUpdate(id, {senttocustomer:1}, {useFindAndModify:false});
+			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Awaiting Client Approval', tstatus: 'Awaiting Client Approval', senttocustomer: 1}, {useFindAndModify:false});
+			await email('6378b084b055c0628e7e32d9', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{link}': `${cmsLink}`, '{attachment}': req.body.attach ?`${templateLink}quotes/${id}.pdf` : null},'', req.body.message);
 			res.send({message:"Quote has been sent to customer!"});
 		}
 	  })
@@ -497,7 +499,7 @@ exports.sendToAdmin = async(req, res) => {
 			const admin = await Admin.findById('61efce935f2e3c054819a02f');
 			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Pending', tstatus: 'Sent to Admin'}, {useFindAndModify:false});
 			//const text = await gethtml.quotehtml();
-			 await email('637b213d7ad1f431a8cdbad7', 'admin', {'{email}': admin.email, '{subject}':req.body.subject, '{description}':req.body.message, '{link}': `${cmsLink}quotes/view/${id}`});
+			 await email('637b213d7ad1f431a8cdbad7', 'admin', {'{email}': admin.email, '{subject}':req.body.subject, '{description}':req.body.message, '{link}': `${cmsLink}quotes/view/${id}`}, '', req.body.message);
 			// await Table.findByIdAndUpdate(id, {senttocustomer:1}, {useFindAndModify:false});
 			res.send({message:"Quote has been sent to admin successfully!"});
 		}
@@ -507,3 +509,14 @@ exports.sendToAdmin = async(req, res) => {
 	  });
   };
   
+  exports.Html = async(req, res) => {
+	const {id} = req.body;
+	if(!id) res.status(404).send({message:"Quote not found!"});
+	else{
+	var data= await gethtml.quotehtml("");
+	var header= await gethtml.pdfheader();
+	var html = `<html>${header + data}</html>`
+	//var content = juice(`<style>${css}</style>${header}`);	
+	res.send(content);
+	}
+  }

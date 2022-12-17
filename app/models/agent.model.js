@@ -6,6 +6,7 @@ module.exports = (mongoose, mongoosePaginate) => {
       email: String,
       phone: String,
       address : String,
+	  xero: String,
       description : String,
       uid:String,
       status: {

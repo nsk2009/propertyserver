@@ -1,13 +1,8 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
-		name: String,
-		rate: String,
-		type: {
-			type: String,
-			enum : ['Inclusive','Exclusive','NoTax'],
-			default: 'Inclusive'
-		}, 
+		/*name: String,
+		rate: String, 
 		status: {
 			type: String,
 			enum : ['Active','Inactive','Trash'],
@@ -20,7 +15,11 @@ module.exports = (mongoose, mongoosePaginate) => {
 		modifiedBy: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "adminuser"
-		},
+		},*/
+		name: String,
+		taxType: String,
+		status: String,
+		effectiveRate: Number
     },
 	{ timestamps: true }
   );

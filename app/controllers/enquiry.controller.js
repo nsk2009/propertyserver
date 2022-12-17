@@ -380,8 +380,6 @@ history.push(his);
       await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${tradieLink}`, '{description}' : `${description}`});
     };    
   }
-  console.log(list);
-  console.log('test');
     res.send({message:"Enquiry has been sent to tradie"});
   })
   .catch((e)=>{ 

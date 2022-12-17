@@ -5,14 +5,24 @@ const { authJwt } = require("../middleware");
 
   var router = require("express").Router();
 
+  // Xero updates 
+  router.get("/xeroupdates", [authJwt.verifyToken], settings.xeroupdates);
+
   // Retrieve a single record with id
   router.get("/:id", [authJwt.verifyToken], settings.findOne);
 
   // Retrieve a single record with id
   router.get("/logo/:id",  settings.findLogo);
+   
+  // Quote Settings a record with id
+  router.post("/quote/:id", upload.single("quotelogo"), settings.quote);
+
+  // Invoice Settings a record with id
+  router.post("/invoice/:id", upload.single("invoicelogo"), settings.invoice);
 
   // Update a record with id
   router.post("/:id", upload.single("logo"), settings.update);
+
 
   // Retrieve a single record with id
   router.get("/findemailapi/:id", [authJwt.verifyToken], settings.findemailapi);
@@ -31,6 +41,7 @@ const { authJwt } = require("../middleware");
 
   // Update a record with id
   router.post("/updatepaymentapi/:id", [authJwt.verifyToken], settings.updatepaymentapi);
+  
   // Update a record with id
   router.get("/findinvoice/:id", [authJwt.verifyToken], settings.findInvoice);
 

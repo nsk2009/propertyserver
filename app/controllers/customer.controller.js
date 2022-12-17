@@ -5,10 +5,12 @@ const Setting = db.settings;
 const Job = db.jobs;
 const Quote = db.quotes;
 const Invoice = db.invoices;
+const Enquiry = db.enquiry;
 const Inbox = db.inbox;
 const Note = db.notes;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
+const xero = require("../middleware/xero");
 const excel = require("exceljs");
 var sprintf = require('sprintf-js').sprintf;
 const settings_id = '6275f6aae272a53cd6908c8d';
@@ -27,42 +29,50 @@ exports.create = async(req, res) => {
 	var set = await Setting.findById(settings_id).then();
 	var Autoid = sprintf('%01d', set.customer);
 	if (!req.body.firstname && !req.body.email)    
-	  return res.status(400).send({ message: ms.messages[0].message });
-		req.body.phone = req.body.phone;
-		req.body.email = req.body.email.trim();
-	  var phone = req.body.phone;
-	  var email = req.body.email;
-	  Table.findOne({ $or: [{ email: email}, { phone: phone}], status : { $ne : 'Trash'}})
-	  .then((data) => {
-		  if (data && data.email === email) 
-			  return res.status(400).send({ message: ms.messages[1].message });
-		  else if (data && data.phone === phone)
-			  return res.status(400).send({ message: ms.messages[2].message });
-		  else{		
-			req.body.uid= "CID"+Autoid;  
-			  Table.create(req.body)
-			  .then(async(data) => { 
-				if (!data) {
-				  res.status(404).send({ message: ms.messages[3].message});
-				} else {
-			activity(`${req.body.firstname} Customer created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
-			await Setting.findByIdAndUpdate(settings_id, { customer: set.customer + 1 }, { useFindAndModify: false });
-			res.send({ message: ms.messages[5].message, id:data._id });
+		return res.status(400).send({ message: ms.messages[0].message });
+	req.body.phone = req.body.phone;
+	req.body.email = req.body.email.trim();
+	var phone = req.body.phone;
+	var email = req.body.email;
+	Table.findOne({ $or: [{ email: email}, { phone: phone}], status : { $ne : 'Trash'}})
+	.then(async(data) => {
+		if (data && data.email === email) 
+			return res.status(400).send({ message: ms.messages[1].message });
+		else if (data && data.phone === phone)
+			return res.status(400).send({ message: ms.messages[2].message });
+		else{	
+			//console.log(req.body);
+			const xeroid = await xero.createContact(req.body, 'customer');
+			if(xeroid !== 'error'){
+				req.body.uid = "CID"+Autoid; 
+				req.body.xero = xeroid;  
+				Table.create(req.body)
+				.then(async(data) => { 
+					if (!data) {
+					res.status(404).send({ message: ms.messages[3].message});
+					} else {
+					activity(`${req.body.firstname} Customer created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+					await Setting.findByIdAndUpdate(settings_id, { customer: set.customer + 1 }, { useFindAndModify: false });
+					res.send({ message: ms.messages[5].message, id:data._id });
+					}
+				})
+				.catch((err) => {
+					res.status(400).send({ message: ms.messages[4].message });
+				});
+			}
+			else{
+				res.status(400).send({ message: ms.messages[4].message });
+			}
 		}
-			  })
-			  .catch((err) => {
-				res.status(500).send({ message: ms.messages[4].message });
-			  });
-	  }
 	}).catch((err) => {
-	  res.status(500).send({ message: ms.messages[4].message });
+		res.status(400).send({ message: ms.messages[4].message });
 	});
-		  
-  };
+
+};
 
 // Retrieve all records from the database.
 exports.findAll = async(req, res) => {
-  const { page, size, search, field, dir, status, show } = req.query;
+  const { page, size, search, field, dir, status, show, tradie } = req.query;
   var sortObject = {};
   if(search){
   var users = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }
@@ -78,6 +88,22 @@ exports.findAll = async(req, res) => {
 
   condition.status = status ? status : { $ne : 'Trash'};
   if(show) condition.show = show;
+  if(tradie){
+	  var jobs = await Job.find({ tradie : tradie });
+	  const cus_ids = [];
+	  jobs.forEach(function (doc, err) {
+		cus_ids.push(doc.customer);
+	  });
+	  var quotes = await Quote.find({ tradie : tradie });
+	  quotes.forEach(function (doc, err) {
+		cus_ids.push(doc.customer);
+	  });
+	  var enquiries = await Enquiry.find({ tradie : tradie });
+	  enquiries.forEach(function (doc, err) {
+		cus_ids.push(doc.customer);
+	  });
+	  condition._id = { $in: cus_ids };
+  }
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
@@ -169,48 +195,44 @@ exports.findList = async(req, res) => {
   };
   
   // Update a record by the id in the request
-  exports.update = async(req, res) => {
-	var ms = await msg('Customer');
+exports.update = async(req, res) => {
+	var ms = await msg('Customer'); 
 	if (!req.body)
-	  return res.status(400).send({ message: ms.messages[0].message});
+		return res.status(400).send({ message: ms.messages[0].message});
 	const id = req.params.id; 
 	Table.findOne({ $or: [{ email: req.body.email}, { phone: req.body.phone}], status : { $ne : 'Trash'}, _id: { $ne : id}})
-	  .then(async(data) => {
-		  /*var set = await Api.findOne({ user: 'admin' });
-	  var sid = set.twilio_type === 'Live' ? set.live_twilio_accountsid : set.sand_twilio_accountsid;
-	  var token = set.twilio_type === 'Live' ? set.live_twilio_authtoken : set.sand_twilio_authtoken;
-	  var twilph = set.twilio_type === 'Live' ? set.live_twilio_number : set.sand_twilio_number;
-	  var sms = twilio(sid, token);
-	  const validnum = sms.lookups.v1.phoneNumbers('+919894052844')
-				.fetch()
-				.then((phone_number) => { return phone_number})
-				.catch((error) => {return error} );*/
-		  //console.log(data);
-		  if (data && data.email === req.body.email) 
-			  return res.status(400).send({ message: ms.messages[1].message });
-		  else if (data && data.phone === req.body.phone)
-			  return res.status(400).send({ message: ms.messages[2].message });
-		  else{
-		const olddata = await Table.findById(id); 
-			await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-			  .then(async(data) => {
-				if (!data) {
-				  res.status(404).send({ message: ms.messages[3].message});
-				} else {
-		   
-			activity(`${req.body.firstname} Lead updated successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
-			res.send({ message: ms.messages[6].message });
-		  }
-			  })
-			  .catch((err) => {
-				res.status(500).send({ message: ms.messages[3].message });
-			  });
-		  }
-		})
-		.catch((err) => {
-		  res.status(500).send({ message: ms.messages[3].message });		  
-	  });
-  };
+	.then(async(data) => {
+		if (data && data.email === req.body.email) 
+			return res.status(400).send({ message: ms.messages[1].message });
+		else if (data && data.phone === req.body.phone)
+			return res.status(400).send({ message: ms.messages[2].message });
+		else{
+			//console.log(req.body);
+			const xeroid = await xero.updateContact(req.body, 'customer');
+			if(xeroid !== 'error'){ 
+				await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+				.then(async(data) => {
+					if (!data) {
+					  res.status(404).send({ message: ms.messages[3].message});
+					} else {
+
+					activity(`${req.body.firstname} Lead updated successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+					res.send({ message: ms.messages[6].message });
+					}
+				})
+				.catch((err) => {
+					res.status(500).send({ message: ms.messages[3].message });
+				});
+			}
+			else{
+				res.status(500).send({ message: req.body.xero });
+			}
+		}
+	})
+	.catch((err) => {
+		res.status(500).send({ message: ms.messages[3].message });		  
+	});
+};
   
   // Delete a record with the specified id in the request
   exports.delete = async(req, res) => {

@@ -40,6 +40,11 @@ module.exports = (mongoose, mongoosePaginate) => {
         enum: ['Active', 'Approved', 'Declined', 'Trash'],
         default: 'Active'
       },
+		sent: {
+			type: Number,
+			enum : [0, 1],
+			default: 0
+		}, 
       type: {
         type: String,
         enum: ['Admin', 'Staff'],

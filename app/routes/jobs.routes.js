@@ -1,6 +1,7 @@
 module.exports = app => {
   const control = require("../controllers/jobs.controller.js");
   const { authJwt } = require("../middleware");
+  const upload = require("../middleware/document");
 
   var router = require("express").Router();
 
@@ -13,6 +14,12 @@ module.exports = app => {
   // Retrieve all records
   router.get("/get", control.findStates);
 
+  // Retrieve all records
+  router.get("/cuslist/:id", [authJwt.verifyToken], control.findCusList);
+
+  // Delete document
+  router.get("/deldocument/:id", [authJwt.verifyToken], control.deldocument);
+
   // Create a records
   router.post("/add", [authJwt.verifyToken], control.create);
 
@@ -21,6 +28,12 @@ module.exports = app => {
 
   // Retrieve a record
   router.get("/:id", [authJwt.verifyToken], control.findOne);
+
+  // Update a document with id
+  router.post("/document/:id", upload.single("document"), control.document);
+
+  // Send a quote to the customer
+  router.post("/sendtradie/:id", [authJwt.verifyToken], control.sendTotradie);
 
   // update a records
   router.post("/:id", [authJwt.verifyToken], control.update);

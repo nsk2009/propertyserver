@@ -5,7 +5,7 @@ module.exports = app => {
   var router = require("express").Router();
 
   // Retrieve all records
-  router.get("/", [authJwt.verifyToken], control.findAll);
+  router.get("/", [authJwt.verifyToken], control.findAll); 
 
   // Retrieve all records
   router.get("/list", [authJwt.verifyToken], control.findList);

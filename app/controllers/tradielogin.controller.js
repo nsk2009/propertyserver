@@ -47,7 +47,7 @@ exports.login = async (req, res, next) => {
 					return res.status(400).send({ message: ms.messages[0].message });
 				else {
 					//activity('Login successfully', req.headers["user"]);	
-					activity('Login successfully', data._id, 'admin', req.session.useragent, req.session.useragent.login);
+					activity('Login successfully', data._id, 'tradie', req.session.useragent, req.session.useragent.login);
 					var token = jwt.sign({ id: data._id }, config.secret, {
 						expiresIn: 86400, // 24 hours
 					});
@@ -96,8 +96,8 @@ exports.forgot = async (req, res) => {
 			if (!data)
 				return res.status(400).send({ message: ms.messages[1].message });
 			else {
-				await email('627a4d0d0b4e6f3ae8039854', 'admin', { '{name}': data.firstname, '{email}': req.body.email, '{link}': cmsLink + "forgot/" + data._id });
-				activity(ms.messages[2].message, data._id, 'admin', req.session.useragent, req.session.useragent.password);
+				await email('6396b29ce4b241356ccb5cf1', 'admin', { '{name}': data.name, '{email}': req.body.email, '{link}': tradieLink + "forgot/" + data._id });
+				activity(ms.messages[2].message, data._id, 'tradie', req.session.useragent, req.session.useragent.password);
 				return res.status(200).send({ message: ms.messages[2].message });
 			}
 		})

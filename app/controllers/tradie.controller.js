@@ -466,7 +466,8 @@ exports.sendKey = async(req, res, next) => {
 		  if (!data)
 			  return res.status(400).send({ message: ms.messages[0].message });
 		  else{
-		await email('6373770854d8e5dda7f9e13f', 'admin', {'{name}': data.name +' '+ data.companyname, '{email}': data.email, '{link}': `${customerLink}register/${data.id}`});  
+			await Table.findByIdAndUpdate(id, { sent: 1}, {useFindAndModify:false});
+			await email('6373770854d8e5dda7f9e13f', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${customerLink}register/${data.id}`});  
 				  return res.status(200).send({message: 'Activation link send to particular mail address', email:data.email});
 		}
 		})

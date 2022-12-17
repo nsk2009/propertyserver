@@ -19,6 +19,15 @@ module.exports = app => {
   // Retrieve all trash records
   router.get("/trashall", [authJwt.verifyToken], control.trashAll);
 
+  // Send a quote to the customer
+  router.post("/sendcustomer/:id", [authJwt.verifyToken], control.sendToCustomer);
+
+  // Retrieve a record
+  router.get("/details/:id", [authJwt.verifyToken], control.details);
+
+  // Retrieve a record
+  router.get("/job/:id", [authJwt.verifyToken], control.job);
+
   // Retrieve a record
   router.get("/:id", [authJwt.verifyToken], control.findOne);
 

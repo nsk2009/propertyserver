@@ -6,9 +6,11 @@ const Quote = db.quotes;
 const Enquiry = db.enquiry;
 const Setting = db.settings;
 const Inbox = db.inbox;
-const Note = db.notes;
+const Note = db.notes; 
+const Document = db.documents; 
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
+const email = require("../middleware/email"); 
 var sprintf = require('sprintf-js').sprintf;
 const settings_id = '6275f6aae272a53cd6908c8d';
 
@@ -81,7 +83,11 @@ exports.findAll = async(req, res) => {
 
   condition.status = status ? status : { $ne : 'Trash'};
   if(show) condition.show = show;
-  if(tradie) condition.tradie = tradie;
+  if(tradie){ 
+	condition.tradie = tradie;
+	condition.status = { $ne : 'New'}
+  }
+  
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
@@ -103,21 +109,10 @@ exports.findAll = async(req, res) => {
 exports.autoload = async (req, res) => {
 
   const id = req.params.id;
-  /*const transactions = await Transactions.find({ customer_id: id }).populate([{ path: "advance_id", select: ["advance_amount", "advance_id"] }])
-    .populate([{ path: "sub_id", select: ["plan_amount", "subs_id"] }]).limit(Number(page8)).sort({ txndate: -1 });
-  const advances = await Advance.find({ customer_id: id }).limit(Number(page7)).sort({ advance_date: -1 });
-  const subscriptions = await Subscription.find({ customer_id: id }).limit(Number(page5)).sort({ createdAt: -1 });
-  var subsPayment = [];
-  if(subsId !== '' )
-  subsPayment = await Transactions.find({ type: "Subscription", sub_id: subsId }).limit(Number(page5)).populate(['customer_id', 'plan_id']).sort({ _id: -1 });
-  const notes = await Notes.find({ to: id }).limit(Number(page1)).populate(['createdBy']).sort({ _id: -1 });
-  const sms = await SMSnotifi.find({ user: id }).limit(Number(page3)).populate(['createdBy']).sort({ _id: -1 });
-  const email = await CustNotifi.find({ user: id }).limit(Number(page3)).populate(['createdBy']).sort({ _id: -1 });
-  const calls = await Calls.find({ customer_id: id }).limit(Number(page2)).populate(['createdBy']).sort({ _id: -1 });*/
-  //const invoices = await Invoice.find({ job: id});
   const notes = await Note.find({ job: id}).sort({ _id: -1 }).populate('createdBy');
   const mails = await Inbox.find({ job: id}).sort({ _id: -1 });
   const invoice = await Invoice.findOne({ job: id});
+  const documents = await Document.find({ job: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');;
   const details = await Table.findOne({ _id: id})
     .populate('createdBy')
     .populate('modifiedBy')
@@ -131,6 +126,7 @@ exports.autoload = async (req, res) => {
     invoice: invoice,
     details: details,
     notes: notes,
+	documents: documents
   });
 };
 
@@ -164,6 +160,44 @@ exports.findList = async(req, res) => {
 		res.send(err);
     });
 };
+
+// Retrieve all state records from the database.
+exports.findCusList = async(req, res) => {
+  const id = req.params.id;
+  const { show, status } = req.query;	
+  var data = await Table.find({usertype: 'customer', customer: id, status: status});
+  if(data.length > 0){ 
+	res.send({list: data});
+  }
+  else{
+	var data = await Table.find({usertype: 'agent', agent: id, status: status});
+	res.send({list: data});
+  }
+};
+
+
+// Send a quote to the customer
+exports.sendTotradie = async(req, res) => {
+	const id = req.params.id;
+	var ms = await msg('jobs');
+	Table.findById(id)
+	  .populate('createdBy')
+	  .populate('modifiedBy')
+	  .populate('customer')
+	  .then(async(data) => {
+		if (!data)
+		res.status(404).send({ message: "OK"});
+		else {
+			//const text = await gethtml.quotehtml();
+			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'In Progress'}, {useFindAndModify:false});
+			await email('639ade0a63fe01870bce2c8f', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{link}': `${cmsLink}`, '{attachment}': req.body.attach ?`${templateLink}quotes/${id}.pdf` : null},'', req.body.message);
+			res.send({message:"Job has been sent to tradie!"});
+		}
+	  })
+	  .catch((err) => {
+		res.status(500).send({ message: "Invalid job id"});
+	  });
+  };
 
 // Retrieve all records from the database.
 exports.trashAll = async(req, res) => {
@@ -223,7 +257,10 @@ exports.makeinvoice = async(req, res) => {
   var Autoid = sprintf('%01d', set.invoice);
   info.uid = "INV" + Autoid;
   info.job = id;
+  info.title = data.title;
   info.customer = data.customer;
+  info.agent = data.agent;
+  info.tenant = data.tenant;
   info.quote = data.quote;
   info.tradie = data.tradie;
   info.items = data.items;
@@ -252,13 +289,19 @@ exports.makeinvoice = async(req, res) => {
 // Find a single record with an id
 exports.quote = async(req, res) => {
   const id = req.params.id;
-  var data = await Enquiry.findById(id);
-  if(data){ 
-	res.send({type: '1', enqid: data.uid, enquiry: data.id, quote:0, customer: data.customer, title:data.title,  address: data.jobaddress, description: data.description, items: []});
+  var data = await Enquiry.findById(id).populate('agent').populate('customer');
+  if(data){
+	var name = data.usertype === 'customer' ? data.customer.firstname+' '+data.customer.lastname : data.agent.name;
+	var customer = data.usertype === 'customer' ? data.customer._id : "";
+	var agent = data.usertype === 'agent' ? data.agent._id : "";
+	res.send({type: '1', enqid: data.uid, enquiry: data.id, quote:0, name: name, usertype: data.usertype, customer: customer, agent: agent, tenant: data.tenant, title:data.title,  address: data.jobaddress, description: data.description, items: []});
   }
-  else{
-	data = await Quote.findById(id);
-	res.send({type: '0', enqid: data.uid, enquiry: data.enquiry, quote: data.id, customer: data.customer, title:data.title, address: '', description: data.description, subtotal:data.subtotal, items: data.items, tax: data.tax, discount: data.discount, distype: data.distype, tradie:data.tradie});
+  else{ 
+	data = await Quote.findById(id).populate('agent').populate('customer');
+	var address = data.usertype === 'customer' ? data.customer.address : data.agent.address;
+	var customer = data.usertype === 'customer' ? data.customer._id : "";
+	var agent = data.usertype === 'agent' ? data.agent._id : "";
+	res.send({type: '0', enqid: data.uid, enquiry: data.enquiry, quote: data.id, usertype: data.usertype, customer: customer, agent: agent, tenant: data.tenant, title:data.title, address: address, description: data.description, subtotal:data.subtotal, items: data.items, total: data.total, taxamt: data.taxamt, taxtype: data.taxtype, tradie:data.tradie}); 
   }
 };
 
@@ -271,12 +314,9 @@ exports.update = async(req, res) => {
   const id = req.params.id;
 
   Table.findOne({ $or: [{ name: req.body.name}], _id: { $ne : id}})
-    .then((data) => {
-		/*if (data && data.name === req.body.name)
-			return res.status(400).send({ message: ms.messages[1].message });
-
-		else{*/
-		  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+    .then(async (data) => {		
+		  await Table.findByIdAndUpdate(id, [{ $unset: ["customer", "agent", "tenant"]}]);
+		  await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 			.then((data) => {
 			  if (!data) {
 				res.status(404).send({ message: ms.messages[0].message + err});
@@ -289,11 +329,32 @@ exports.update = async(req, res) => {
 			.catch((err) => {
 				res.status(500).send({ message: ms.messages[0].message + err});
 			});
-		//}
       })
 	  .catch((err) => {
       res.status(500).send({ message: ms.messages[0].message + err});
 	});
+};
+
+// Update a record by the id in the request
+exports.document = async(req, res) => {  
+  var ms = await msg('jobs');
+  const id = req.params.id;  
+  if(req.file){
+	req.body.document = req.file.filename;
+	req.body.job = id;
+	var doc = await Document.create(req.body);
+	res.send({ doc: req.file.filename, id: doc._id });
+  }
+  else
+	res.send({ doc: '', id: 0 });
+};
+
+// Update a record by the id in the request
+exports.deldocument = async(req, res) => {  
+  var ms = await msg('jobs');
+  const id = req.params.id;
+  await Document.findByIdAndUpdate(id, {status : 'Inactive'}, { useFindAndModify: false })
+  res.send({ message: 'Document has been successfully deleted.' });
 };
 
 exports.trash = async(req, res) => {

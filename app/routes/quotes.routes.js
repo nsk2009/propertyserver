@@ -9,9 +9,12 @@ module.exports = app => {
 
   // Retrieve all records
   router.get("/list", [authJwt.verifyToken], control.findList);
+
+  // Retrieve all records
+  router.get("/gethtml", control.Html);
   
   // Generate pdf
-  router.post("/pdf", control.generatePdf);
+  //router.get("/pdf/:id", control.generatePdf);
 
   // Retrieve all records
   router.get("/cuslist/:id", [authJwt.verifyToken], control.findCusList);

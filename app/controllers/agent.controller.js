@@ -10,6 +10,7 @@ const Invoice = db.invoices;
 const Inbox = db.inbox;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
+const xero = require("../middleware/xero");
 const excel = require("exceljs");
 var sprintf = require('sprintf-js').sprintf;
 const settings_id = '6275f6aae272a53cd6908c8d';
@@ -21,45 +22,51 @@ const getPagination = (page, size) => {
   return { limit, offset };
 };
 
-
 // Create and Save a new record
 exports.create = async(req, res) => {
 	var ms = await msg('Agent');
 	var set = await Setting.findById(settings_id).then();
 	var Autoid = sprintf('%01d', set.agent);
 	if (!req.body.name && !req.body.email)    
-	  return res.status(400).send({ message: ms.messages[0].message });
-		req.body.phone = req.body.phone;
-		req.body.email = req.body.email.trim();
-	  var phone = req.body.phone;
-	  var email = req.body.email;
-	  Table.findOne({ $or: [{ email: email}, { phone: phone}], status : { $ne : 'Trash'}})
-	  .then((data) => {
-		  if (data && data.email === email) 
-			  return res.status(400).send({ message: ms.messages[1].message });
-		  else if (data && data.phone === phone)
-			  return res.status(400).send({ message: ms.messages[2].message });
-		  else{		
-			req.body.uid= "AID"+Autoid;  
-			  Table.create(req.body)
-			  .then(async(data) => { 
-				if (!data) {
-				  res.status(404).send({ message: ms.messages[3].message});
-				} else {
-			activity(`${req.body.name} Agent created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
-			await Setting.findByIdAndUpdate(settings_id, { agent: set.agent + 1 }, { useFindAndModify: false });
-			res.send({ message: ms.messages[5].message, id:data._id });
+		return res.status(400).send({ message: ms.messages[0].message });
+	req.body.phone = req.body.phone;
+	req.body.email = req.body.email.trim();
+	var phone = req.body.phone;
+	var email = req.body.email;
+	Table.findOne({ $or: [{ email: email}, { phone: phone}], status : { $ne : 'Trash'}})
+	.then(async(data) => {
+		if (data && data.email === email) 
+			return res.status(400).send({ message: ms.messages[1].message });
+		else if (data && data.phone === phone)
+			return res.status(400).send({ message: ms.messages[2].message });
+		else{
+			const xeroid = await xero.createContact(req.body, 'agent');
+			if(xeroid !== 'error'){		
+				req.body.uid= "AID"+Autoid;
+				req.body.xero = xeroid;  
+				Table.create(req.body)
+				.then(async(data) => { 
+					if (!data) {
+						res.status(404).send({ message: ms.messages[3].message});
+					} 
+					else {
+						activity(`${req.body.name} Agent created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+						await Setting.findByIdAndUpdate(settings_id, { agent: set.agent + 1 }, { useFindAndModify: false });
+						res.send({ message: ms.messages[5].message, id:data._id });
+					}
+				})
+				.catch((err) => {
+				res.status(400).send({ message: ms.messages[4].message });
+				});
+			}
+			else{
+				res.status(400).send({ message: ms.messages[4].message });
+			}
 		}
-			  })
-			  .catch((err) => {
-				res.status(500).send({ message: ms.messages[4].message });
-			  });
-	  }
 	}).catch((err) => {
-	  res.status(500).send({ message: ms.messages[4].message });
+		res.status(400).send({ message: ms.messages[4].message });
 	});
-		  
-  };
+};
 
 // Create and Save a new record
 exports.createtenant = async(req, res) => {
@@ -203,11 +210,12 @@ exports.findList = async(req, res) => {
 exports.findTenantList = async(req, res) => {
 	const id = req.params.id;
 	var ms = await msg('Agent');
+	var agent = await Table.findOne({_id: id});
 	Tenant.find({agent: id})
 	  .then((data) => {
 		if (!data)
 		  res.status(404).send({ message: ms.messages[3].message });
-		else res.send({list:data});
+		else res.send({agent: agent, list:data});
 	  })
 	  .catch((err) => {
 		res.status(500).send({ message: ms.messages[3].message });
@@ -235,49 +243,44 @@ exports.findTenantList = async(req, res) => {
 	  });
   };
   
-  // Update a record by the id in the request
-  exports.update = async(req, res) => {
+// Update a record by the id in the request
+exports.update = async(req, res) => {
 	var ms = await msg('Agent');
 	if (!req.body)
-	  return res.status(400).send({ message: ms.messages[0].message});
+	return res.status(400).send({ message: ms.messages[0].message});
 	const id = req.params.id; 
 	Table.findOne({ $or: [{ email: req.body.email}, { phone: req.body.phone}], status : { $ne : 'Trash'}, _id: { $ne : id}})
-	  .then(async(data) => {
-		  /*var set = await Api.findOne({ user: 'admin' });
-	  var sid = set.twilio_type === 'Live' ? set.live_twilio_accountsid : set.sand_twilio_accountsid;
-	  var token = set.twilio_type === 'Live' ? set.live_twilio_authtoken : set.sand_twilio_authtoken;
-	  var twilph = set.twilio_type === 'Live' ? set.live_twilio_number : set.sand_twilio_number;
-	  var sms = twilio(sid, token);
-	  const validnum = sms.lookups.v1.phoneNumbers('+919894052844')
-				.fetch()
-				.then((phone_number) => { return phone_number})
-				.catch((error) => {return error} );*/
-		  //console.log(data);
-		  if (data && data.email === req.body.email) 
-			  return res.status(400).send({ message: ms.messages[1].message });
-		  else if (data && data.phone === req.body.phone)
-			  return res.status(400).send({ message: ms.messages[2].message });
-		  else{
-		const olddata = await Table.findById(id); 
-			await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-			  .then(async(data) => {
+	.then(async(data) => {
+		if (data && data.email === req.body.email) 
+			return res.status(400).send({ message: ms.messages[1].message });
+		else if (data && data.phone === req.body.phone)
+			return res.status(400).send({ message: ms.messages[2].message });
+		else{
+			const xeroid = await xero.updateContact(req.body, 'agent');
+			if(xeroid !== 'error'){ 
+				await Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+				.then(async(data) => {
 				if (!data) {
 				  res.status(404).send({ message: ms.messages[3].message});
-				} else {
-		   
-			activity(`${req.body.firstname} agent updated successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
-			res.send({ message: ms.messages[6].message });
-		  }
-			  })
-			  .catch((err) => {
-				res.status(500).send({ message: ms.messages[3].message });
-			  });
-		  }
-		})
-		.catch((err) => {
-		  res.status(500).send({ message: ms.messages[3].message });		  
-	  });
-  };
+				}
+				else {
+					activity(`${req.body.firstname} agent updated successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+					res.send({ message: ms.messages[6].message });
+				}
+				})
+				.catch((err) => {
+					res.status(500).send({ message: ms.messages[3].message });
+				});
+			}
+			else{
+				res.status(500).send({ message: req.body.xero });
+			}
+		}
+	})
+	.catch((err) => {
+		res.status(500).send({ message: ms.messages[3].message });		  
+	});
+};
   
 // Update and Save a new record
 exports.updatetenant = async(req, res) => {

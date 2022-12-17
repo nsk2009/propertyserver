@@ -2,17 +2,14 @@ module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
       user: String,
-      default: String,
-	  stripe_type: String,	  
+      default: String,	  
 	  loan_type: String,
 	  live_xero_key: String,
+	  live_clientid: String,
+	  live_clientsecret: String,
 	  sand_xero_key: String,
-	  live_loan_achkey: String,
-	  live_loan_acquirekey: String,
-	  live_loan_disbursekey: String,
-	  sand_loan_achkey: String,
-	  sand_loan_acquirekey: String,
-	  sand_loan_disbursekey: String,
+	  sand_clientid: String,
+	  sand_clientsecret: String,
     },
     { timestamps: true }
   );

@@ -1,47 +1,67 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
-		quote:  {
+		quote: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "quotes"
 		},
-		customer:  {
+		customer: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "customer"
 		},
-		tradie:  {
+		agent:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "agent"
+		},
+		tenant:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "tenant"
+		},
+		tradie: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "tradie"
 		},
-		job:  {
+		job: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "jobs"
 		},
 		uid:String,
-		terms:String,
+		title:String,
 		contact: Array,
 		subtotal: String,
 		grosstotal: String,
 		discamt: String,
 		taxamt: String,
 		total: String,
-		discount: String,
+		discount: String, 
 		distype: String,
 		taxrate: String,
 		taxtype: String,
-		expiry_date: String,
+		issuedate: String,
+		duedate: String,
 		terms: String,
+		xero: String,
 		taxid:{
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "taxes"
 		},
+		sent: {
+			type: Number,
+			enum : [0, 1],
+			default: 0
+		}, 
 		taxname: String,
 		tax: String,
 		items: Array,
 		description: String,
+		usertype: {
+			type: String,
+			enum : ['customer','agent'],
+			default: 'customer'
+		}, 	
 		status: {
 			type: String,
-			enum : ['Draft','Awaiting Payment','Complete'],
+			enum : ['Draft','Awaiting Payment','Paid'],
 			default: 'Draft'
 		}, 	
 		createdBy: {

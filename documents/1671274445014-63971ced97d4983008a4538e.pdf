@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Error: ENOENT: no such file or directory, stat &#39;D:\node_projects\tradify\server\quotes\63971ced97d4983008a4538e.pdf&#39;</pre>
+</body>
+</html>

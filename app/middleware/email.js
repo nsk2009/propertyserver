@@ -6,8 +6,9 @@ var fs = require('fs');
 const db = require("../models");
 const Table = db.emailnotification;
 const Api = db.emailapi;
-const message = async(id, user, values) => {		
+const message = async(id, user, values, attach, content) => {		
 	var val = await Table.findOne({ _id: id}).then();
+	var mailcon = content ? content : val.content;
 	var set = await Api.findOne({ user: user}).then();
 	//console.log(set);
 	var readHTMLFile = function(path, callback) {
@@ -49,14 +50,14 @@ const message = async(id, user, values) => {
 		//console.log(html);
 		var template = handlebars.compile(html);
 		var replacements = {
-			 content: val.content
+			 content: mailcon
 		};
 		var htmlToSend = template(replacements);
 		var mapObj = values;//{cat:"dog",dog:"goat",goat:"cat"};
 		var from = val.subject+' '+val.from;
 		var to = val.to;
 		var subject = val.subject;
-		var str = val.content;
+		var str = mailcon;
 		var re = new RegExp(Object.keys(mapObj).join("|"),"gi");
 		//console.log(re);
 		str = str.replace(re, function(matched){

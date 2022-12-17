@@ -3,6 +3,7 @@ const Table = db.taxes;
 const Admin = db.adminusers;
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
+const xero = require("../middleware/xero");
 
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
@@ -80,7 +81,7 @@ exports.findAll = async(req, res) => {
 
 // Retrieve all records from the database.
 exports.findStates = async (req, res) => {
-	var ms = await msg('states');
+	var ms = await msg('taxes');
   
 	Table.find({ status: "Active" }).sort({ name: 1 })
 	  .then((data) => {
@@ -99,7 +100,7 @@ exports.findStates = async (req, res) => {
 // Application Service
 exports.findList = async(req, res) => {
 	const { status } = req.query;
-	Table.find({ status: status})
+	Table.find()
   .sort({name: 1})
     .then((data) => {
       res.send({list: data});
@@ -140,7 +141,7 @@ exports.trashAll = async(req, res) => {
 // Find a single record with an id
 exports.findOne = async(req, res) => {
   const id = req.params.id;
-  var ms = await msg('states');
+  var ms = await msg('taxes');
   Table.findById(id)
     .populate('createdBy')
     .populate('modifiedBy')
@@ -157,7 +158,7 @@ exports.findOne = async(req, res) => {
 
 // Update a record by the id in the request
 exports.update = async(req, res) => {
-  var ms = await msg('states');
+  var ms = await msg('taxes');
   if (!req.body)
     return res.status(400).send({ message: ms.messages[0].message});
   const id = req.params.id;
@@ -189,7 +190,7 @@ exports.update = async(req, res) => {
 };
 
 exports.trash = async(req, res) => {
-	var ms = await msg('states');
+	var ms = await msg('taxes');
 	const id = req.params.id;
 
 	Table.findById(id)
@@ -218,7 +219,7 @@ exports.trash = async(req, res) => {
 };
 
 exports.restore = async(req, res) => {
-  var ms = await msg('states');
+  var ms = await msg('taxes');
 	const id = req.params.id;
 
 	Table.findById(id)

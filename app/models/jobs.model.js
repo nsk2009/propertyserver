@@ -65,7 +65,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 		}, 
 		status: {
 			type: String,
-			enum : ['New','In Progress','To Invoice','Awaiting Payment','Complete'],
+			enum : ['New','In Progress','To Invoice','Complete'],
 			default: 'New'
 		}, 	
 		createdBy: {

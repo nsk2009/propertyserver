@@ -4,9 +4,12 @@ const Dateformat = db.dateformat;
 const Timezone = db.timezone;
 const Emailapi = db.emailapi;
 const Smsapi = db.smsapi;
+const Tax = db.taxes; 
+const Bank = db.banks; 
 const Paymentapi = db.accountingapis;
 const Transactions = db.transactions;
 const activity = require("../middleware/activity");
+const xero = require("../middleware/xero");
 var fs = require('fs');
 
 // Find a single record with an id
@@ -35,6 +38,29 @@ exports.findOne = async(req, res) => {
         .status(500)
         .send({ message: "Error retrieving record with id=" + id });
     });
+};
+
+// Retrieve all state records from the database.
+exports.xeroupdates = async(req, res) => {
+	const taxes = await xero.getTaxes();
+	var accs = [];var oldaccs = [];	
+	taxes.map((e, i)=>{
+		if(e.canApplyToRevenue === true){
+			accs.push(e);
+			oldaccs.push(e.name);
+		}
+    });
+	await Tax.deleteMany({name: { $in: oldaccs }})
+	await Tax.insertMany(accs);
+	const banks = await xero.getAccounts();
+	var accs = [];var oldaccs = [];	 
+	banks.map((e, i)=>{
+		accs.push(e);
+		oldaccs.push(e.name);
+    });
+	await Bank.deleteMany({name: { $in: oldaccs }})
+	await Bank.insertMany(accs);
+	res.send({message: "Xero updates successfully completed"}); 
 };
 
 // Find a single record with an id
@@ -82,6 +108,72 @@ exports.update = async(req, res) => {
 		  //console.log(req.socket.remoteAddress);
 		  //console.log(req.connection.remoteAddress);
       activity( data.title + ' Details has been updated Successfully', req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+      res.send({ logo: logo, message: "Record was updated successfully." });
+  }
+    })
+    .catch((err) => {
+      res.status(500).send({ message: "Error updating record with id=" + id, });
+    });
+};
+ 
+// Update a record by the id in the request
+exports.quote = async(req, res) => {
+  if (!req.body) {
+    return res.status(400).send({
+      message: "Data to update can not be empty!",
+    });
+  }
+
+  const id = req.params.id;
+  console.log(req.file);
+  var set = await Table.findById(id); 
+  if(req.file){
+	  fs.unlinkSync(__basedir+'/uploads/'+set.quotelogo);
+  req.body.quotelogo = req.file.filename;
+  }
+  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+    .then((data) => {
+		const logo = req.file ? req.file.filename : data.quotelogo;
+      if (!data) {
+        res.status(404).send({ message: `Cannot update record with id=${id}. Maybe record was not found!`, });
+      } 
+	  else {
+		  //console.log(req.socket.remoteAddress);
+		  //console.log(req.connection.remoteAddress);
+      activity( 'Quote setting details has been updated Successfully', req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
+      res.send({ logo: logo, message: "Record was updated successfully." });
+  }
+    })
+    .catch((err) => {
+      res.status(500).send({ message: "Error updating record with id=" + id, });
+    });
+};
+
+// Update a record by the id in the request
+exports.invoice = async(req, res) => {
+  if (!req.body) {
+    return res.status(400).send({
+      message: "Data to update can not be empty!",
+    });
+  }
+
+  const id = req.params.id;
+  //console.log(req.file);
+  var set = await Table.findById(id);
+  if(req.file){
+	  //fs.unlinkSync(__basedir+'/uploads/'+set.invoicelogo);
+  req.body.invoicelogo = req.file.filename;
+  }
+  Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
+    .then((data) => {
+		const logo = req.file ? req.file.filename : data.invoicelogo;
+      if (!data) {
+        res.status(404).send({ message: `Cannot update record with id=${id}. Maybe record was not found!`, });
+      } 
+	  else {
+		  //console.log(req.socket.remoteAddress);
+		  //console.log(req.connection.remoteAddress);
+      activity('Invoice setting details has been updated Successfully', req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.edit);
       res.send({ logo: logo, message: "Record was updated successfully." });
   }
     })
