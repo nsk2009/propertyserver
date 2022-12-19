@@ -464,7 +464,7 @@ const generatePdf = async(id) => {
 	await browser.close();
 	//res.send(`${id}.pdf`); 
 	return 'generated';*/
-	const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
+	const browser = await puppeteer.launch(chromium);
 	  const page = await browser.newPage();
 	  /*await page.goto('https://news.ycombinator.com', {
 		waitUntil: 'networkidle2',

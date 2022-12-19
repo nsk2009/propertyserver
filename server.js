@@ -209,7 +209,7 @@ const general = db.settings;
     global.templateLink = set.templateLink;
     global.tradieLink = set.tradieLink;
     global.customerLink = set.customerLink;
-    global.chromium = set.browser; 
+    global.chromium = JSON.parse(set.browser); 
   })
   .catch((e)=>{
     return null;
