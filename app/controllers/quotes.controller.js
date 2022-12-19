@@ -444,8 +444,9 @@ exports.restore = async(req, res) => {
 const generatePdf = async(id) => {
 	var foot= await gethtml.quotefooter();
 	var data= await gethtml.quotehtml(id);
-	var header= await gethtml.pdfheader();
-	/*//const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox'], executablePath: chromium});
+	
+	/*var header= await gethtml.pdfheader();
+	//const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox'], executablePath: chromium});
 	const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
 	const page = await browser.newPage();  
 	
@@ -463,7 +464,6 @@ const generatePdf = async(id) => {
 	await browser.close();
 	//res.send(`${id}.pdf`); 
 	return 'generated';*/
-	//const browser = await puppeteer.launch({headless: false}); // default is true
 	const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
 	  const page = await browser.newPage();
 	  /*await page.goto('https://news.ycombinator.com', {
@@ -474,13 +474,10 @@ const generatePdf = async(id) => {
 	  // page.pdf() is currently supported only in headless mode.
 	  // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
 	  await page.pdf({
-		path: `./quotes/${id}.pdf`,
-		format: "A4",
+		path: './quotes/test.pdf',
+		format: 'letter',
 		displayHeaderFooter:true,
 		footerTemplate: foot,
-		printBackground : true,
-		preferCSSPageSize: false,
-		margin : {top: "140px", bottom : "40px"}
 	  });
 
 	  await browser.close();
