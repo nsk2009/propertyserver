@@ -452,13 +452,7 @@ const generatePdf = async(id) => {
 	await page.setContent(`<style>${css}</style>${data}`, { waitUntil: ['domcontentloaded', 'networkidle2'] });
 	await page.pdf({
 		path: `./quotes/${id}.pdf`,
-		format: "A4",
-		displayHeaderFooter:true,
-		headerTemplate: header,
-		footerTemplate: foot,
-		printBackground : true,
-		preferCSSPageSize: false,
-		margin : {top: "140px", bottom : "40px"} 
+		format: "A4" 
 	} ); 
 	await browser.close();
 	//res.send(`${id}.pdf`); 
