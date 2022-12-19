@@ -442,6 +442,27 @@ exports.restore = async(req, res) => {
 // var html = "<!DOCTYPE html> <html>  <head>	<meta charset='utf-8' /><title>Hello world!</title>  </head>  <body>	<h1>User List</h1><ul>{{#each users}}<li>Name: {{this.name}}</li><li>Age: {{this.age}}</li><br />{{/each}}</ul></body></html>"
 // Find a single record with an id
 const generatePdf = async(id) => {
+	var data= await gethtml.quotehtml(id);
+	var foot= await gethtml.quotefooter();
+	var header= await gethtml.pdfheader();
+	//const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox'], executablePath: chromium});
+	/*const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
+	const page = await browser.newPage();  
+	
+	await page.setContent(`<style>${css}</style>${data}`, { waitUntil: ['domcontentloaded', 'networkidle2'] });
+	await page.pdf({
+		path: `./quotes/${id}.pdf`,
+		format: "A4",
+		displayHeaderFooter:true,
+		headerTemplate: header,
+		footerTemplate: foot,
+		printBackground : true,
+		preferCSSPageSize: false,
+		margin : {top: "140px", bottom : "40px"} 
+	} ); 
+	await browser.close();
+	//res.send(`${id}.pdf`); 
+	return 'generated';*/
 	const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
 	  const page = await browser.newPage();
 	  /*await page.goto('https://news.ycombinator.com', {
@@ -453,6 +474,8 @@ const generatePdf = async(id) => {
 	  await page.pdf({
 		path: './quotes/test.pdf',
 		format: 'letter',
+		headerTemplate: header,
+		footerTemplate: foot,
 	  });
 
 	  await browser.close();
