@@ -475,6 +475,7 @@ const generatePdf = async(id) => {
 	  await page.pdf({
 		path: './quotes/test.pdf',
 		format: 'letter',
+		displayHeaderFooter:true,
 		footerTemplate: foot,
 	  });
 
