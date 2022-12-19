@@ -52,28 +52,23 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to server application." });  
 });
 app.get("/pdf", (req, res) => {
-	var fs = require("fs");
-var pdf = require("html-pdf");
-var html = '<div id="pageFooter">Default footer</div>Test Message<div id="pageHeader">Default header</div>';
-var options = { format: "Letter",
-  header: {
-    "height": "45mm",
-    "contents": '<div style="text-align: center; color: #F00;">Author: Marc Bachmann</div>'
-  },
-  footer: {
-    "height": "28mm",
-    "contents": {
-      first: 'Cover page',
-      2: 'Second page', // Any page number is working. 1-based index
-      default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-      last: 'Last Page'
-    }
-  }};
- 
-pdf.create(html, options).toFile("./businesscard.pdf", function (err, res) {
-  if (err) return console.log(err);
-  //console.log(res); // { filename: '/app/businesscard.pdf' }
-});
+	const puppeteer = require('puppeteer');
+
+	(async () => {
+	  const browser = await puppeteer.launch();
+	  const page = await browser.newPage();
+	  await page.goto('https://news.ycombinator.com', {
+		waitUntil: 'networkidle2',
+	  });
+	  // page.pdf() is currently supported only in headless mode.
+	  // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
+	  await page.pdf({
+		path: 'hn.pdf',
+		format: 'letter',
+	  });
+
+	  await browser.close();
+	})();
   res.json({ message: "PDF Generated" });  
 });
 
