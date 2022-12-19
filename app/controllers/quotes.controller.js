@@ -449,7 +449,8 @@ const generatePdf = async(id) => {
 	const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
 	const page = await browser.newPage();  
 	
-	await page.setContent(`<style>${css}</style>${data}`, { waitUntil: ['domcontentloaded', 'networkidle2'] });
+	//await page.setContent(`<style>${css}</style>${data}`, { waitUntil: ['domcontentloaded', 'networkidle2'] });
+	await page.setContent('Test PDF', { waitUntil: ['domcontentloaded', 'networkidle2'] });
 	await page.pdf({
 		path: `./quotes/${id}.pdf`,
 		format: "A4" 
