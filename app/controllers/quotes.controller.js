@@ -477,7 +477,6 @@ const generatePdf = async(id) => {
 		path: `./quotes/${id}.pdf`,
 		format: "A4",
 		displayHeaderFooter:true,
-		headerTemplate: header,
 		footerTemplate: foot,
 		printBackground : true,
 		preferCSSPageSize: false,
