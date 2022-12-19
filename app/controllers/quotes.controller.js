@@ -468,7 +468,7 @@ const generatePdf = async(id) => {
 	  /*await page.goto('https://news.ycombinator.com', {
 		waitUntil: 'networkidle2',
 	  });*/
-	  await page.setContent('Test PDF dfdsghfds', { waitUntil: ['domcontentloaded', 'networkidle2'] });
+	  await page.setContent('Test PDF', { waitUntil: ['domcontentloaded', 'networkidle2'] });
 	  // page.pdf() is currently supported only in headless mode.
 	  // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
 	  await page.pdf({
