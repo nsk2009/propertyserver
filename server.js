@@ -55,7 +55,7 @@ app.get("/pdf", (req, res) => {
 	const puppeteer = require('puppeteer');
 
 	(async () => {
-	  const browser = await puppeteer.launch({executablePath: '/usr/bin/chromium-browser'});
+	  const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
 	  const page = await browser.newPage();
 	  await page.goto('https://news.ycombinator.com', {
 		waitUntil: 'networkidle2',
