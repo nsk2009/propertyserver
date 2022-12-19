@@ -445,9 +445,9 @@ const generatePdf = async(id) => {
 	var foot= await gethtml.quotefooter();
 	var data= await gethtml.quotehtml(id);
 	
-	/*var header= await gethtml.pdfheader();
+	var header= await gethtml.pdfheader();
 	//const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox'], executablePath: chromium});
-	const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
+	/*const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
 	const page = await browser.newPage();  
 	
 	await page.setContent(`<style>${css}</style>${data}`, { waitUntil: ['domcontentloaded', 'networkidle2'] });
@@ -477,7 +477,11 @@ const generatePdf = async(id) => {
 		path: `./quotes/${id}.pdf`,
 		format: 'letter',
 		displayHeaderFooter:true,
+		headerTemplate: header,
 		footerTemplate: foot,
+		printBackground : true,
+		preferCSSPageSize: false,
+		margin : {top: "140px", bottom : "40px"} 
 	  });
 
 	  await browser.close();
