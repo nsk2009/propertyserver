@@ -166,6 +166,7 @@ global.cmsLink = '';
 global.templateLink = '';
 global.tradieLink = '';
 global.customerLink = '';
+global.chromium = '';
 
 
 require("./app/routes/adminuser.routes")(app);
@@ -212,6 +213,7 @@ const general = db.settings;
     global.templateLink = set.templateLink;
     global.tradieLink = set.tradieLink;
     global.customerLink = set.customerLink;
+    global.chromium = set.browser; 
   })
   .catch((e)=>{
     return null;
