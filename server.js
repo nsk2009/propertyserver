@@ -63,7 +63,7 @@ app.get("/pdf", (req, res) => {
 	  // page.pdf() is currently supported only in headless mode.
 	  // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
 	  await page.pdf({
-		path: 'hn.pdf',
+		path: './quotes/hn.pdf',
 		format: 'letter',
 	  });
 
