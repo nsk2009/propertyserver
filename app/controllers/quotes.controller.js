@@ -442,22 +442,20 @@ exports.restore = async(req, res) => {
 // var html = "<!DOCTYPE html> <html>  <head>	<meta charset='utf-8' /><title>Hello world!</title>  </head>  <body>	<h1>User List</h1><ul>{{#each users}}<li>Name: {{this.name}}</li><li>Age: {{this.age}}</li><br />{{/each}}</ul></body></html>"
 // Find a single record with an id
 const generatePdf = async(id) => {
-	var data= await gethtml.quotehtml(id);
-	var foot= await gethtml.quotefooter();
-	var header= await gethtml.pdfheader();
-	//const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox'], executablePath: chromium});
 	const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] });
-	const page = await browser.newPage();  
-	
-	//await page.setContent(`<style>${css}</style>${data}`, { waitUntil: ['domcontentloaded', 'networkidle2'] });
-	await page.setContent('Test PDF', { waitUntil: ['domcontentloaded', 'networkidle2'] });
-	await page.pdf({
-		path: `./quotes/${id}.pdf`,
-		format: "A4" 
-	} ); 
-	await browser.close();
-	//res.send(`${id}.pdf`); 
-	return 'generated';
+	  const page = await browser.newPage();
+	  /*await page.goto('https://news.ycombinator.com', {
+		waitUntil: 'networkidle2',
+	  });*/
+	  await page.setContent('Test PDF', { waitUntil: ['domcontentloaded', 'networkidle2'] });
+	  // page.pdf() is currently supported only in headless mode.
+	  // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
+	  await page.pdf({
+		path: './quotes/hn.pdf',
+		format: 'letter',
+	  });
+
+	  await browser.close();
 };
 // Send a quote to the customer
 exports.sendQuoteToCustomer = async(req, res) => {
