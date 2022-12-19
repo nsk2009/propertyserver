@@ -445,7 +445,7 @@ const generatePdf = async(id) => {
 	var data= await gethtml.quotehtml(id);
 	var foot= await gethtml.quotefooter();
 	var header= await gethtml.pdfheader();
-	const browser = await puppeteer.launch({headless:true, executablePath: chromium});
+	const browser = await puppeteer.launch({executablePath: chromium});
 
 	const page = await browser.newPage();  
 	
