@@ -445,8 +445,8 @@ const generatePdf = async(id) => {
 	var data= await gethtml.quotehtml(id);
 	var foot= await gethtml.quotefooter();
 	var header= await gethtml.pdfheader();
-	const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox'], executablePath: chromium});
-
+	//const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox'], executablePath: chromium});
+	const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser', args: [ '--disable-gpu', '--disable-setuid-sandbox', '--no-sandbox', '--no-zygote' ] })
 	const page = await browser.newPage();  
 	
 	await page.setContent(`<style>${css}</style>${data}`, { waitUntil: ['domcontentloaded', 'networkidle2'] });
