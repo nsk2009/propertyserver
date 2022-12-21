@@ -6,5 +6,8 @@ module.exports = app => {
   // CMS
   router.get("/cms", control.cms);
   
+   // Xero Webhooks
+  router.post("/webhooks", control.webhooks);
+  
   app.use("/api/dashboard", router);
 };

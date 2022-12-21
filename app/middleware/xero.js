@@ -233,13 +233,51 @@ const getAccounts = async() => {
 	}
 }
 
+const getContact = async(contactID) => {
+	const xero = await connect();
+    const tokenSet = await xero.getClientCredentialsToken();
+	await xero.updateTenants();
+	const xeroTenantId = xero.tenants[0].tenantId;
+
+	try {
+	  const response = await xero.accountingApi.getContact(xeroTenantId, contactID);
+	  var res = JSON.parse(JSON.stringify(response.body));
+	  //console.log(res);
+	  return res.contacts[0];
+	} catch (err) {
+	  const error = JSON.stringify(err.response.body, null, 2)
+	  //console.log(`Status Code: ${err.response.statusCode} => ${error}`);
+	}
+}
+
+const getInvoice = async(invoiceID) => {
+	const xero = await connect();
+    const tokenSet = await xero.getClientCredentialsToken();
+	await xero.updateTenants();
+	const xeroTenantId = xero.tenants[0].tenantId;
+	const unitdp = 4;
+
+	try {
+	   const response = await xero.accountingApi.getInvoice(xeroTenantId, invoiceID,  unitdp);
+	  var res = JSON.parse(JSON.stringify(response.body));
+	  //console.log(res);
+	  return res.invoices[0];
+	} catch (err) {
+	  const error = JSON.stringify(err.response.body, null, 2)
+	  //console.log(`Status Code: ${err.response.statusCode} => ${error}`);
+	}
+}
+
+
 const options = {
     createContact,
 	updateContact,
 	createInvoice,
 	updateInvoice,
 	getTaxes,
-	getAccounts
+	getAccounts,
+	getContact,
+	getInvoice,
 };
 
 module.exports = options;

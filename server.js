@@ -1,8 +1,8 @@
 require('dotenv/config')
 const express = require("express");
 const session = require('express-session');
-const parseurl = require('parseurl');
-const nodemailer = require("nodemailer");
+// const parseurl = require('parseurl');
+// const nodemailer = require("nodemailer");
 const cron = require("node-cron");
 inspect = require('util').inspect; 
 const bodyParser = require('body-parser')
@@ -10,6 +10,19 @@ const crypto = require('crypto')
 // const bodyParser = require("body-parser"); /* deprecated */
 const cors = require("cors");
 const app = express();
+const xeroapp = express();
+const control = require("./app/controllers/dashboard.controller.js");
+ 
+// Set the body parser options
+var options = {
+  type: 'application/json'
+};
+
+// Using the options above, create a bodyParser middleware that returns raw responses.
+var itrBodyParser = bodyParser.raw(options)
+ 
+app.post('/webhooks', itrBodyParser, control.webhooks);
+
 var useragent = require('express-useragent');
 var corsOptions = {
   origin: ["http://localhost:4001", "http://192.168.0.91:4001", "http://192.168.0.51:4004"]

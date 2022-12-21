@@ -75,6 +75,8 @@ const message = async(id, user, values, attach, content) => {
 		//console.log(str);
 		htmlToSend = htmlToSend.replace('content', str);
 		//'https://salesplanner.org/demo/property/server/uploads/1663415591197-stock-photo-1052601383.jpg'
+		
+		var filename = values['{attachment}'] ? values['{attachment}'].split('/').reverse()[0] : '';
 		var mailOptions = {
 			from: from,
 			to : to,
@@ -82,8 +84,8 @@ const message = async(id, user, values, attach, content) => {
 			html : htmlToSend,
 			attachments:values['{attachment}']? [
 		        {   // file on disk as an attachment
-		            filename: '1663415591197-stock-photo-1052601383.jpg',
-		            path: values['{attachment}'] // stream this file
+		            filename: filename,
+					filePath: values['{attachment}'] // stream this file
 		        },
 			]:null
 		};

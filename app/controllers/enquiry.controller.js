@@ -64,10 +64,10 @@ exports.findAll = async(req, res) => {
   condition.status = status ? status : { $ne : 'Trash'};
   condition._id = { $ne : '61efce935f2e3c054819a02f'};
   if(tradie) condition.tradie={$in:tradie};
-  const crby = ({path: 'createdBy', select: {'firstname': 1, 'lastname': 1}});
+  const crby = {path: 'createdBy', select: {'firstname': 1, 'lastname': 1}};
   const mfby = {path: 'modifiedBy', select: {'firstname': 1, 'lastname': 1}}; 
-  const cust = {path: 'customer', select: {'firstname': 1, 'lastname': 1}}; 
-  const agent = {path: 'agent', select: {'name': 1, 'company': 1}};
+  const cust = {path: 'customer', select: {'uid': 1, 'name': 1}}; 
+  const agent = {path: 'agent', select: {'name': 1, 'uid': 1}};
   
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
@@ -380,10 +380,10 @@ history.push(his);
       await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${tradieLink}`, '{description}' : `${description}`});
     };    
   }
-    res.send({message:"Enquiry has been sent to tradie"});
+    res.send({message: ms.messages[8].message});
   })
   .catch((e)=>{ 
-    res.status(400).send({message:"Oops! Enquiry can't be send!"});
+    res.status(400).send({message: ms.messages[8].message});
   });
 	
 }
@@ -395,7 +395,7 @@ exports.resendEnquiry = async (req, res) => {
     const tradieDet = await TradieTable.findById(tradie);
 if(enquiry&& tradieDet && index){
      await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${cmsLink}`, '{description}' : `${enquiry.history[index].description}`});
-     res.send({message:"Enquiry has been sent to tradie"});
+     res.send({message: ms.messages[8].message});
 }
-     else res.status(404).send({message:"Enquiry or Tradie is not found!"});
+     else res.status(404).send({message: ms.messages[8].message});
 }

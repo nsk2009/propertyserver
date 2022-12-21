@@ -25,7 +25,7 @@ const getPagination = (page, size) => {
 
 // Create and Save a new record
 exports.create = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Tradie');
 	var set = await Setting.findById(settings_id).then();
 	var Autoid = sprintf('%01d', set.tradies);
 	if (!req.body.name && !req.body.email)    
@@ -130,7 +130,7 @@ exports.findList = async(req, res) => {
 
 // Find a single record with an id
 exports.findOne = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Tradie');
 	const id = req.params.id;
 	const ip = req.headers['x-forwarded-for'];
 	Table.findById(id)
@@ -159,7 +159,7 @@ exports.details = async(req, res) => {
   
   // Update all records from the database.
   exports.updateAll = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Tradie');
 	const { ids, status } = req.query;
 	Table.updateMany(
 	 { _id: { $in: JSON.parse(ids) } },
@@ -180,7 +180,7 @@ exports.details = async(req, res) => {
   
   // Update a record by the id in the request
   exports.update = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Tradie');
 	if (!req.body)
 	  return res.status(400).send({ message: ms.messages[0].message});
 	const id = req.params.id; 
@@ -232,7 +232,7 @@ exports.details = async(req, res) => {
 
    // Morgin a record by the id in the request
    exports.morgin = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Tradie');
 	if (!req.body)
 	  return res.status(400).send({ message: ms.messages[0].message});
 	const id = req.params.id;
@@ -253,7 +253,7 @@ exports.details = async(req, res) => {
   
   // Delete a record with the specified id in the request
   exports.delete = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Tradie');
 	const id = req.params.id;
   
 	Table.findByIdAndRemove(id, { useFindAndModify: false })
@@ -274,7 +274,7 @@ exports.details = async(req, res) => {
   
   // Delete all records from the database.
   exports.deleteAll = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Tradie');
 	Table.deleteMany({})
 	  .then((data) => {
 		activity(`${data.deletedCount} Lead deleted many records permanently`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.delete);
@@ -291,7 +291,7 @@ exports.details = async(req, res) => {
   };
   
   exports.trash = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Tradie');
 	  const id = req.params.id;
 	  
 	  Table.findById(id)
@@ -319,7 +319,7 @@ exports.details = async(req, res) => {
   };
   
   exports.restore = async(req, res) => {
-	var ms = await msg('Customer');
+	var ms = await msg('Tradie');
 	  const id = req.params.id;
 	  
 	  Table.findById(id)

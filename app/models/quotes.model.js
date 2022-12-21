@@ -1,7 +1,6 @@
 module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
-		name: String,
 		customer:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "customer"

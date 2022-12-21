@@ -129,7 +129,7 @@ exports.syncMails = async (req, res) => {
 					});
 				});
 				msg.once('attributes', async function(attrs) {
-					var attachments = findAttachmentParts(attrs.struct);
+					/*var attachments = findAttachmentParts(attrs.struct);
 					sessionstorage.setItem('attachments', attachments);
 					for (const attachment of attachments) {
 					  var f = imap.fetch(attrs.uid , { //do not use imap.seq.fetch here
@@ -138,7 +138,7 @@ exports.syncMails = async (req, res) => {
 					  });
 					  //build function to process attachment message
 					  f.on('message', buildAttMessageFunction(attachment));
-					}
+					}*/
 				});
 				msg.once('end', function() {
 					//console.log(prefix + 'Finished');

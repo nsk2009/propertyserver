@@ -297,11 +297,11 @@ exports.quote = async(req, res) => {
 	res.send({type: '1', enqid: data.uid, enquiry: data.id, quote:0, name: name, usertype: data.usertype, customer: customer, agent: agent, tenant: data.tenant, title:data.title,  address: data.jobaddress, description: data.description, items: []});
   }
   else{ 
-	data = await Quote.findById(id).populate('agent').populate('customer');
+	data = await Quote.findById(id).populate('agent').populate('customer').populate('enquiry');
 	var address = data.usertype === 'customer' ? data.customer.address : data.agent.address;
 	var customer = data.usertype === 'customer' ? data.customer._id : "";
 	var agent = data.usertype === 'agent' ? data.agent._id : "";
-	res.send({type: '0', enqid: data.uid, enquiry: data.enquiry, quote: data.id, usertype: data.usertype, customer: customer, agent: agent, tenant: data.tenant, title:data.title, address: address, description: data.description, subtotal:data.subtotal, items: data.items, total: data.total, taxamt: data.taxamt, taxtype: data.taxtype, tradie:data.tradie}); 
+	res.send({type: '0', enqid: data.uid, enquiry: data.enquiry ? data.enquiry._id : null, quote: data.id, usertype: data.usertype, customer: customer, agent: agent, tenant: data.tenant, title:data.title, address: data.enquiry ? data.enquiry.jobaddress : address, description: data.description, subtotal:data.subtotal, items: data.items, total: data.total, taxamt: data.taxamt, taxtype: data.taxtype, tradie:data.tradie}); 
   }
 };
 

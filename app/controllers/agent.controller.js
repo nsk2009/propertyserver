@@ -90,7 +90,7 @@ exports.createtenant = async(req, res) => {
 				  res.status(404).send({ message: ms.messages[3].message});
 				} else {
 					activity(`${req.body.name} tenant created successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
-					res.send({ message: ms.messages[5].message, id:data._id });
+					res.send({ message: ms.messages[11].message, id:data._id });
 				}
 			  })
 			  .catch((err) => {
@@ -305,7 +305,7 @@ exports.updatetenant = async(req, res) => {
 				  res.status(404).send({ message: ms.messages[3].message});
 				} else {
 					activity(`${req.body.name} tenant updated successfully`, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
-					res.send({ message: ms.messages[5].message, id:data._id });
+					res.send({ message: ms.messages[12].message, id:data._id });
 				}
 			  })
 			  .catch((err) => {

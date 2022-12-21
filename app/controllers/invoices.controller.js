@@ -26,7 +26,7 @@ const getPagination = (page, size) => {
 
 
 // Create and Save a new record
-exports.create = async(req, res) => {
+exports.create = async(req, res) => { 
 	const result = await Table.find({status: { $ne: 'Trash'} });
 	var set = await Setting.findById(settings_id).then();
 	var Autoid = sprintf('%01d', set.invoice);
@@ -265,8 +265,7 @@ const generatePdf = async(id) => {
 	var data= await gethtml.invoicehtml(id);
 	var foot= await gethtml.quotefooter();
 	var header= await gethtml.pdfheader();
-	const browser = await puppeteer.launch({headless:true});
-
+	const browser = await puppeteer.launch(chromium);
 	const page = await browser.newPage();  
 	
 	await page.setContent(`<style>${css}</style>${data}`, { waitUntil: ['domcontentloaded', 'networkidle2'] });

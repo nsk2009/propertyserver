@@ -50,6 +50,10 @@ module.exports = (mongoose, mongoosePaginate) => {
 			enum : [0, 1],
 			default: 0
 		}, 
+		paid: {
+			type: Number,
+			default: 0
+		}, 
 		taxname: String,
 		tax: String,
 		items: Array,

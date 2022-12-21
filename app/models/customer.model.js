@@ -3,6 +3,7 @@ module.exports = (mongoose, mongoosePaginate) => {
     {
       firstname:String,
       lastname:String,
+      name:String,
       password: String,
       email: String,
       contact: Array,

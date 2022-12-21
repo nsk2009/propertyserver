@@ -463,7 +463,7 @@ const generatePdf = async(id) => {
 	} ); 
 	await browser.close();
 	//res.send(`${id}.pdf`); 
-	return 'generated';*/
+	return 'generated';*/ 
 	const browser = await puppeteer.launch(chromium);
 	  const page = await browser.newPage();
 	  /*await page.goto('https://news.ycombinator.com', {
@@ -499,8 +499,9 @@ exports.sendQuoteToCustomer = async(req, res) => {
 		res.status(404).send({ message: "OK"});
 		else {
 			//const text = await gethtml.quotehtml();
+			var filename = `./quotes/${id}.pdf`;
 			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Awaiting Client Approval', tstatus: 'Awaiting Client Approval', senttocustomer: 1}, {useFindAndModify:false});
-			await email('6378b084b055c0628e7e32d9', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{link}': `${cmsLink}`, '{attachment}': req.body.attach ?`${templateLink}quotes/${id}.pdf` : null},'', req.body.message);
+			await email('6378b084b055c0628e7e32d9', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{link}': `${cmsLink}`, '{attachment}': req.body.attach ? filename : null},'', req.body.message);
 			res.send({message:"Quote has been sent to customer!"});
 		}
 	  })
