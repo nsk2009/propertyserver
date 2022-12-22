@@ -273,7 +273,12 @@ exports.approve = async(req, res) => {
 				else if(status === 'Revise')
 					await email('6392fc3de7f0f032633fa2c6', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid});
 			}
-			res.send({message:"Quote has been "+status+" successfully"});
+			if(status === 'Approved')
+			res.send({ message: ms.messages[12].message });
+			else if(status === 'Declined')
+			res.send({ message: ms.messages[13].message });
+			else if(status === 'Revise')
+			res.send({ message: ms.messages[11].message });
 		}
 	  })
 	  .catch((err) => {
