@@ -270,11 +270,11 @@ exports.approve = async(req, res) => {
 			if(data.tradie){
 				const tradieDet = await TradieTable.findById(data.tradie);
 				if(status === 'Approved')
-					await email('63786d08b055c0628e7e32d3', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid, '{title}':data.title, '{settingemail}': enquiry.accountemail});
+					await email('63786d08b055c0628e7e32d3', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid, '{title}':data.title, '{settingemail}': set.accountemail});
 				else if(status === 'Declined')
-					await email('6392fc2ce7f0f032633fa2c5', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid, '{title}':data.title, '{settingemail}': enquiry.accountemail});
+					await email('6392fc2ce7f0f032633fa2c5', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid, '{title}':data.title, '{settingemail}': set.accountemail});
 				else if(status === 'Revise')
-					await email('6392fc3de7f0f032633fa2c6', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid, '{title}':data.title, '{settingemail}': enquiry.accountemail});
+					await email('6392fc3de7f0f032633fa2c6', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid, '{title}':data.title, '{settingemail}': set.accountemail});
 			}
 			if(status === 'Approved')
 			res.send({ message: ms.messages[12].message });
@@ -285,6 +285,7 @@ exports.approve = async(req, res) => {
 		}
 	  })
 	  .catch((err) => {
+		  console.log(err);
 		res.status(500).send({ message: "Invalid quote id"});
 	  });
   };
