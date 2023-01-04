@@ -8,6 +8,7 @@ const Invoice = db.invoices;
 const Enquiry = db.enquiry;
 const Inbox = db.inbox;
 const Note = db.notes;
+const Document = db.documents; 
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 const xero = require("../middleware/xero");
@@ -146,6 +147,7 @@ exports.details = async(req, res) => {
 	const data = await Table.findById(id).populate('createdBy').populate('modifiedBy');	
 	const jobs = await Job.find({customer: id}).populate('tradie');
     const notes = await Note.find({ customer: id}).sort({ _id: -1 }).populate('createdBy');
+  const documents = await Document.find({ customer: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');
 	const info = [];
 	jobs.forEach(function(doc, err) {
 	  info.push(doc._id);
@@ -153,7 +155,7 @@ exports.details = async(req, res) => {
 	const mails = await Inbox.find({ job: { $in: info }}).sort({ _id: -1 });	
 	const quotes = await Quote.find({customer: id}); 
 	const invoices = await Invoice.find({customer: id}); 
-	res.send({data:data, jobs: jobs, quotes: quotes, invoices: invoices, mails: mails, notes: notes});
+	res.send({data:data, jobs: jobs, quotes: quotes, invoices: invoices, mails: mails, notes: notes, documents: documents});
   };
 
   // Find a single record with an id

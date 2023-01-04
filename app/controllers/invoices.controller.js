@@ -5,6 +5,7 @@ const Setting = db.settings;
 const Inbox = db.inbox;
 const Note = db.notes;
 const Job = db.jobs;
+const Document = db.documents; 
 const msg = require("../middleware/message");
 const puppeteer = require("puppeteer");
 const activity = require("../middleware/activity");
@@ -140,8 +141,9 @@ exports.sendToCustomer = async(req, res) => {
 		res.status(404).send({ message: "OK"});
 		else {
 			//const text = await gethtml.quotehtml();
-			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Awaiting Payment', sent: 1}, {useFindAndModify:false});
-			await email('6396f126e4b241356ccb5cf5', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{attachment}': req.body.attach ?`${templateLink}invoices/${id}.pdf` : null}, '', req.body.message);
+			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Awaiting Payment', sent: 1}, {useFindAndModify:false});			
+			var filename = `/invoices/${id}.pdf`;
+			await email('6396f126e4b241356ccb5cf5', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{attachment}': req.body.attach ? filename : null}, '', req.body.message);
 			res.send({message:"Invoice has been sent to customer!"});
 		}
 	  })
@@ -207,6 +209,7 @@ exports.details = async(req, res) => {
   var ms = await msg('invoices');
   const notes = await Note.find({ invoice: id}).sort({ _id: -1 }).populate('createdBy');
   const mails = await Inbox.find({ invoice: id}).sort({ _id: -1 });
+  const documents = await Document.find({ invoice: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');
   Table.findById(id)
     .populate('createdBy')
     .populate('modifiedBy')
@@ -219,7 +222,7 @@ exports.details = async(req, res) => {
     .then((data) => {
       if (!data)
       res.status(404).send({ message: "OK"});
-      else res.send({ data: data, notes: notes, mails: mails});
+      else res.send({ data: data, notes: notes, mails: mails, documents: documents});
     })
     .catch((err) => {
       res.status(500).send({ message: "Invalid quote id"});

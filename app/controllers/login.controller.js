@@ -89,6 +89,7 @@ exports.login = async (req, res, next) => {
 // forgot
 exports.forgot = async (req, res) => {
 	var ms = await msg('login');
+	var set = await Setting.findById('6275f6aae272a53cd6908c8d').then();
 	if (!req.body.email)
 		return res.status(400).send({ message: ms.messages[1].message });
 	Table.findOne({ email: req.body.email, status: { $ne: 'Trash' } })
@@ -96,7 +97,7 @@ exports.forgot = async (req, res) => {
 			if (!data)
 				return res.status(400).send({ message: ms.messages[1].message });
 			else {
-				await email('627a4d0d0b4e6f3ae8039854', 'admin', { '{name}': data.firstname, '{email}': req.body.email, '{link}': cmsLink + "forgot/" + data._id });
+				await email('627a4d0d0b4e6f3ae8039854', 'admin', { '{name}': data.firstname, '{email}': req.body.email, '{link}': cmsLink + "forgot/" + data._id , '{settingemail}': set.quoteemail});
 				activity(ms.messages[2].message, data._id, 'admin', req.session.useragent, req.session.useragent.password);
 				return res.status(200).send({ message: ms.messages[2].message });
 			}

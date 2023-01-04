@@ -10,6 +10,10 @@ module.exports = (mongoose, mongoosePaginate) => {
         type: mongoose.Schema.Types.ObjectId,
         ref: "agent"
       },
+      enquiry: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "enquiry"
+      },
       job: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "jobs"
@@ -18,6 +22,10 @@ module.exports = (mongoose, mongoosePaginate) => {
         type: mongoose.Schema.Types.ObjectId,
         ref: "quotes"
       },
+		invoice:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "invoices"
+		},
       tradie: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "tradie"

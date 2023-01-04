@@ -459,6 +459,8 @@ exports.findAllHistory = async (req, res) => {
 }
 
 exports.sendKey = async(req, res, next) => {
+	var set = await Setting.findById('6275f6aae272a53cd6908c8d').then();
+	console.log(set);
 	var ms = await msg('login');
 	const id = req.params.id;
 	Table.findById(id)
@@ -467,7 +469,7 @@ exports.sendKey = async(req, res, next) => {
 			  return res.status(400).send({ message: ms.messages[0].message });
 		  else{
 			await Table.findByIdAndUpdate(id, { sent: 1}, {useFindAndModify:false});
-			await email('6373770854d8e5dda7f9e13f', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${customerLink}register/${data.id}`});  
+			await email('6373770854d8e5dda7f9e13f', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${customerLink}register/${data.id}`, '{settingemail}': set.quoteemail});  
 				  return res.status(200).send({message: 'Activation link send to particular mail address', email:data.email});
 		}
 		})

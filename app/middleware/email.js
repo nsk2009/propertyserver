@@ -77,6 +77,7 @@ const message = async(id, user, values, attach, content) => {
 		//'https://salesplanner.org/demo/property/server/uploads/1663415591197-stock-photo-1052601383.jpg'
 		
 		var filename = values['{attachment}'] ? values['{attachment}'].split('/').reverse()[0] : '';
+		console.log(__basedir + values['{attachment}']);
 		var mailOptions = {
 			from: from,
 			to : to,
@@ -85,7 +86,11 @@ const message = async(id, user, values, attach, content) => {
 			attachments:values['{attachment}']? [
 		        {   // file on disk as an attachment
 		            filename: filename,
-					filePath: values['{attachment}'] // stream this file
+					path: __basedir + values['{attachment}']
+					//content: new Buffer(FILE_CONTENT, 'base64'),
+					//contentType: 'application/pdf'
+					//streamSource: fs.createReadStream(values['{attachment}'])
+					//filePath: values['{attachment}'] // stream this file
 		        },
 			]:null
 		};

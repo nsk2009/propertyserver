@@ -8,6 +8,7 @@ const Quote = db.quotes;
 const Note = db.notes;
 const Invoice = db.invoices;
 const Inbox = db.inbox;
+const Document = db.documents; 
 const msg = require("../middleware/message");
 const activity = require("../middleware/activity");
 const xero = require("../middleware/xero");
@@ -187,7 +188,8 @@ exports.details = async(req, res) => {
     const tenants = await Tenant.find({ agent: id}).sort({ _id: -1 }).populate('createdBy');	
 	const quotes = await Quote.find({agent: id}); 
 	const invoices = await Invoice.find({agent: id}); 
-	res.send({data:data, jobs: jobs, quotes: quotes, invoices: invoices, mails: mails, notes: notes, tenants: tenants});
+  const documents = await Document.find({ agent: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');
+	res.send({data:data, jobs: jobs, quotes: quotes, invoices: invoices, mails: mails, notes: notes, tenants: tenants, documents: documents});
   };
 
   // Find a single record with an id

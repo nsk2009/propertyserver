@@ -3,6 +3,9 @@ const Table = db.enquiry;
 const Columns = db.columns;
 const TradieTable = db.tradie;
 const Setting = db.settings;
+const Inbox = db.inbox;
+const Note = db.notes;
+const Document = db.documents;
 const excel = require("exceljs");
 const msg = require("../middleware/message");
 const email = require("../middleware/email");
@@ -115,8 +118,10 @@ exports.trashAll = async(req, res) => {
 
 // Find a single record with an id
 exports.findOne = async(req, res) => {
-  const id = req.params.id;
-  
+  const id = req.params.id;  
+  const notes = await Note.find({ enquiry: id}).sort({ _id: -1 }).populate('createdBy');
+  const mails = await Inbox.find({ enquiry: id}).sort({ _id: -1 });
+  const documents = await Document.find({ enquiry: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');
   Table.findById(id)
     .populate('createdBy')
     .populate('modifiedBy')
@@ -126,7 +131,7 @@ exports.findOne = async(req, res) => {
     .then((data) => {
       if (!data)
       res.status(404).send({ message: ms.messages[8].message});
-      else res.send(data);
+      else res.send({data: data, notes: notes, mails: mails, documents: documents});
     })
     .catch((err) => {
       res.status(500).send({ message: ms.messages[8].message});
@@ -356,7 +361,8 @@ exports.exceldoc = async(req, res) => {
 
 exports.sendEnquiry = async (req, res) => {
   var ms = await msg('enquiry');
-	const id = req.params.id;
+	const id = req.params.id;	
+  var set = await Setting.findById(settings_id).then();
 	const enquiry = await Table.findById(id).populate({ path: 'createdBy', select: ['firstname', 'lastname'] }).populate({ path: 'modifiedBy', select: ['firstname', 'lastname'] });
 	var ids=enquiry.tradie ? enquiry.tradie : [];
   var trd=[];
@@ -377,7 +383,7 @@ history.push(his);
     if(trds.length>0) {
       // trds.forEach(async(data)=>{
         for(const data of trds){
-      await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${tradieLink}`, '{description}' : `${description}`});
+      await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': data.name, '{email}': data.email, '{enqid}': enquiry.uid, '{title}': enquiry.title, '{settingemail}': enquiry.accountemail, '{link}': `${tradieLink}enquiry/view/${id}`, '{description}' : `${description}`});
     };    
   }
     res.send({message: ms.messages[8].message});

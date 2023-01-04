@@ -4,6 +4,7 @@ const Admin = db.adminusers;
 const Setting = db.settings;
 const TradieTable = db.tradie;
 const enquiryTable = db.enquiry;
+const Document = db.documents; 
 const Note = db.notes;
 const Inbox = db.inbox;
 const msg = require("../middleware/message");
@@ -229,7 +230,8 @@ exports.details = async(req, res) => {
   const id = req.params.id;
   var ms = await msg('quotes');
   const notes = await Note.find({ quote: id}).sort({ _id: -1 }).populate('createdBy');
-  const mails = await Inbox.find({ quote: id}).sort({ _id: -1 });
+  const mails = await Inbox.find({ quote: id}).sort({ _id: -1 });  
+  const documents = await Document.find({ quote: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');
   Table.findById(id)
     .populate('createdBy')
     .populate('modifiedBy')
@@ -241,7 +243,7 @@ exports.details = async(req, res) => {
     .then((data) => {
       if (!data)
       res.status(404).send({ message: "OK"});
-      else res.send({data: data, notes: notes, mails: mails});
+      else res.send({data: data, notes: notes, mails: mails, documents: documents});
     })
     .catch((err) => {
       res.status(500).send({ message: "Invalid quote id"});
@@ -252,6 +254,7 @@ exports.details = async(req, res) => {
 exports.approve = async(req, res) => {
 	const id = req.params.id;
 	const status = req.params.status;
+  var set = await Setting.findById(settings_id).then();
 	var ms = await msg('quotes');
 	Table.findById(id)
 	  .populate('createdBy')
@@ -267,11 +270,11 @@ exports.approve = async(req, res) => {
 			if(data.tradie){
 				const tradieDet = await TradieTable.findById(data.tradie);
 				if(status === 'Approved')
-					await email('63786d08b055c0628e7e32d3', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid});
+					await email('63786d08b055c0628e7e32d3', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid, '{title}':data.title, '{settingemail}': enquiry.accountemail});
 				else if(status === 'Declined')
-					await email('6392fc2ce7f0f032633fa2c5', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid});
+					await email('6392fc2ce7f0f032633fa2c5', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid, '{title}':data.title, '{settingemail}': enquiry.accountemail});
 				else if(status === 'Revise')
-					await email('6392fc3de7f0f032633fa2c6', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid});
+					await email('6392fc3de7f0f032633fa2c6', 'admin', {'{name}': tradieDet.name, '{email}': tradieDet.email, '{link}': `${tradieLink}quotes/view/${id}`, '{quote}':data.uid, '{title}':data.title, '{settingemail}': enquiry.accountemail});
 			}
 			if(status === 'Approved')
 			res.send({ message: ms.messages[12].message });
@@ -504,7 +507,7 @@ exports.sendQuoteToCustomer = async(req, res) => {
 		res.status(404).send({ message: "OK"});
 		else {
 			//const text = await gethtml.quotehtml();
-			var filename = `./quotes/${id}.pdf`;
+			var filename = `/quotes/${id}.pdf`;
 			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Awaiting Client Approval', tstatus: 'Awaiting Client Approval', senttocustomer: 1}, {useFindAndModify:false});
 			await email('6378b084b055c0628e7e32d9', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{link}': `${cmsLink}`, '{attachment}': req.body.attach ? filename : null},'', req.body.message);
 			res.send({message:"Quote has been sent to customer!"});

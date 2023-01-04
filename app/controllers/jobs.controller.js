@@ -112,7 +112,7 @@ exports.autoload = async (req, res) => {
   const notes = await Note.find({ job: id}).sort({ _id: -1 }).populate('createdBy');
   const mails = await Inbox.find({ job: id}).sort({ _id: -1 });
   const invoice = await Invoice.findOne({ job: id});
-  const documents = await Document.find({ job: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');;
+  const documents = await Document.find({ job: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');
   const details = await Table.findOne({ _id: id})
     .populate('createdBy')
     .populate('modifiedBy')
@@ -190,7 +190,7 @@ exports.sendTotradie = async(req, res) => {
 		else {
 			//const text = await gethtml.quotehtml();
 			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'In Progress'}, {useFindAndModify:false});
-			await email('639ade0a63fe01870bce2c8f', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{link}': `${cmsLink}`, '{attachment}': req.body.attach ?`${templateLink}quotes/${id}.pdf` : null},'', req.body.message);
+			await email('639ade0a63fe01870bce2c8f', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{link}': `${tradieLink}jobs/view/${id}`, '{attachment}': req.body.attach ?`${templateLink}quotes/${id}.pdf` : null},'', req.body.message);
 			res.send({message:"Job has been sent to tradie!"});
 		}
 	  })
@@ -341,7 +341,18 @@ exports.document = async(req, res) => {
   const id = req.params.id;  
   if(req.file){
 	req.body.document = req.file.filename;
+	if(req.body.type === 'job')
 	req.body.job = id;
+	else if(req.body.type === 'quote')
+	req.body.quote = id;
+	else if(req.body.type === 'enquiry')
+	req.body.enquiry = id;
+	else if(req.body.type === 'invoice')
+	req.body.invoice = id;
+	else if(req.body.type === 'customer')
+	req.body.customer = id;
+	else if(req.body.type === 'agent')
+	req.body.agent = id;
 	var doc = await Document.create(req.body);
 	res.send({ doc: req.file.filename, id: doc._id });
   }

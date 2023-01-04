@@ -23,6 +23,7 @@ const getPagination = (page, size) => {
 // Create and Save a new record
 exports.create = async(req, res) => {
   var ms = await msg('adminusers');
+	var set = await Setting.findById('6275f6aae272a53cd6908c8d').then();
   if (!req.body.firstname && !req.body.email)    
     return res.status(400).send({ message: ms.messages[4].message });
   Table.findOne({ $or: [{ email: req.body.email}], status: { $ne: 'Trash' }})
@@ -45,7 +46,7 @@ exports.create = async(req, res) => {
 				res.status(404).send({ message: ms.messages[10].message});
 			  } 
 			  else {				  
-				await email('627a49c8968ec71b14435192', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${cmsLink}register/${data.id}`});      
+				await email('627a49c8968ec71b14435192', 'admin', {'{name}': data.name, '{email}': data.email, '{link}': `${cmsLink}register/${data.id}`, '{settingemail}': set.accountemail});      
 				activity(ms.messages[0].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
 				  res.send({ message: ms.messages[0].message });
 			  }
@@ -110,13 +111,15 @@ exports.handleLogin = async(req, res, next) => {
 
 exports.setPass = async(req, res, next) => {
   var ms = await msg('login');
+	var set = await Setting.findById('6275f6aae272a53cd6908c8d').then();
+	console.log(set);
   const id = req.params.id;
   Table.findById(id)
     .then(async(data) => {
 		if (!data)
 			return res.status(400).send({ message: ms.messages[0].message });
 		else{
-      await email('627a49c8968ec71b14435192', 'admin', {'{name}': data.firstname +' '+ data.lastname, '{email}': data.email, '{link}': `${cmsLink}register/${data.id}`});  
+      await email('627a49c8968ec71b14435192', 'admin', {'{name}': data.firstname +' '+ data.lastname, '{email}': data.email, '{link}': `${cmsLink}register/${data.id}`, '{settingemail}': set.quoteemail});  
 				return res.status(200).send({message: 'Activation link send to particular mail address'});
       }
       })

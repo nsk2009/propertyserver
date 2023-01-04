@@ -36,6 +36,7 @@ module.exports = (mongoose, mongoosePaginate) => {
       tls:String,
       browser:String,
 	  quotelogo:String,
+	accountemail:String,
 	quoteemail:String,
 	quotewebsite:String,
 	quotecontact:String,
