@@ -57,7 +57,7 @@ exports.findAll = async(req, res) => {
   else
     condition = {};
   condition['status'] = status ? status : { $ne : 'Trash'};
-  sortObject[field] = dir;
+  sortObject['module'] = dir;
   const { limit, offset } = getPagination(page, size);
 
   Table.paginate(condition, {  populate: ['createdBy', 'modifiedBy'], offset, limit, sort: sortObject })
