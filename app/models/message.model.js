@@ -2,6 +2,7 @@ module.exports = (mongoose, mongoosePaginate) => {
   var schema = mongoose.Schema(
     {
       name: String,
+      module: String,
 	  messages: [],
 	  helps: [],
 	  createdBy: {
