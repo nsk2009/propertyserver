@@ -43,6 +43,7 @@ const quotehtml = async(id) => {
 	var items = '';
 	record.items && record.items.map((row, idx) => {
 		let [tit, des] = row.item.split("\n");
+		var det = des !== undefined ? des : '';
 		var taxData = taxes.filter(function (el) {
 			return el.taxType === row.tax;
 		});
@@ -50,7 +51,7 @@ const quotehtml = async(id) => {
 			`<tr key=${idx}>
 			  <td>${idx+1}</td>
 			  <td style="max-width:400px;"><span>${tit}</span>
-			  <p>${des}</p>
+			  <p>${det}</p>
 			  </td>
 			  <td>${parseFloat(row.price).toFixed(2)}</td>
 			  <td>${parseFloat(row.qty).toFixed(2)}</td>

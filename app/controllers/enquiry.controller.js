@@ -383,7 +383,7 @@ history.push(his);
     if(trds.length>0) {
       // trds.forEach(async(data)=>{
         for(const data of trds){
-      await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': data.name, '{email}': data.email, '{enqid}': enquiry.uid, '{title}': enquiry.title, '{settingemail}': enquiry.accountemail, '{link}': `${tradieLink}enquiry/view/${id}`, '{description}' : `${description}`});
+      await email('6375ccacdecff938dcb3df94', 'admin', {'{name}': data.name, '{email}': data.email, '{enqid}': enquiry.uid, '{title}': enquiry.title, '{settingemail}': set.accountemail, '{link}': `${tradieLink}enquiry/view/${id}`, '{description}' : `${description}`});
     };    
   }
     res.send({message: ms.messages[8].message});

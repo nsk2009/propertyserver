@@ -343,7 +343,7 @@ exports.revise = async(req, res) => {
 // 			return res.status(400).send({ message: ms.messages[1].message });
 
 // 		else{
-	      var revise = await Table.findOne({_id: id});
+	      var revise = await Table.findOne({_id: id}).populate('createdBy').populate('modifiedBy');;
 		  let history = revise.history;
 		  let info ={			  
 			taxtype: revise.taxtype,
@@ -365,7 +365,7 @@ exports.revise = async(req, res) => {
 			distype: revise.distype,
 			tax: revise.tax,
 			items: revise.items,
-			modifiedBy: revise.modifiedBy,
+			modifiedBy: revise.modifiedBy ? revise.modifiedBy.firstname+' '+revise.modifiedBy.lastname : revise.createdBy.firstname+' '+revise.createdBy.lastname,
 			updatedAt: revise.updatedAt
 		  } 
 		  history.push(info);
