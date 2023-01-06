@@ -179,11 +179,7 @@ exports.details = async(req, res) => {
 	const ip = req.headers['x-forwarded-for'];
 	const data = await Table.findById(id).populate('createdBy').populate('modifiedBy');	
 	const jobs = await Job.find({agent: id}).populate('tradie');
-	const info = [];
-	jobs.forEach(function(doc, err) {
-	  info.push(doc._id);
-	});
-	const mails = await Inbox.find({ job: { $in: info }}).sort({ _id: -1 });
+	const mails = await Inbox.find({ agent: id}).sort({ _id: -1 });
     const notes = await Note.find({ agent: id}).sort({ _id: -1 }).populate('createdBy');
     const tenants = await Tenant.find({ agent: id}).sort({ _id: -1 }).populate('createdBy');	
 	const quotes = await Quote.find({agent: id}); 

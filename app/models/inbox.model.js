@@ -27,6 +27,10 @@ module.exports = (mongoose, mongoosePaginate) => {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "agent"
 		},
+		tradie:  {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "tradie"
+		},
 		enquiry:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "enquiry"

@@ -148,11 +148,7 @@ exports.details = async(req, res) => {
 	const jobs = await Job.find({customer: id}).populate('tradie');
     const notes = await Note.find({ customer: id}).sort({ _id: -1 }).populate('createdBy');
   const documents = await Document.find({ customer: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');
-	const info = [];
-	jobs.forEach(function(doc, err) {
-	  info.push(doc._id);
-	});
-	const mails = await Inbox.find({ job: { $in: info }}).sort({ _id: -1 });	
+	const mails = await Inbox.find({ customer: id}).sort({ _id: -1 });	
 	const quotes = await Quote.find({customer: id}); 
 	const invoices = await Invoice.find({customer: id}); 
 	res.send({data:data, jobs: jobs, quotes: quotes, invoices: invoices, mails: mails, notes: notes, documents: documents});

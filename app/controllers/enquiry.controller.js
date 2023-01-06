@@ -3,6 +3,9 @@ const Table = db.enquiry;
 const Columns = db.columns;
 const TradieTable = db.tradie;
 const Setting = db.settings;
+const Admin = db.adminusers;
+const Customer = db.customer;
+const Agent = db.agent;
 const Inbox = db.inbox;
 const Note = db.notes;
 const Document = db.documents;
@@ -60,12 +63,26 @@ exports.findAll = async(req, res) => {
   var sortObject = {};
   //console.log(info);
   if(search){	
-  var condition = { $or: [{ name: { $regex: new RegExp(search), $options: "i" }}, { phone: { $regex: new RegExp(search), $options: "i" }}, { email: { $regex: new RegExp(search), $options: "i" }}]};
+  var admins = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }}, {lastname: { $regex: new RegExp(search), $options: "i" }}]});
+  const adminids = [];
+	admins.forEach(function(doc, err) {
+	  adminids.push(doc._id);
+	});
+  var customers = await Customer.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }}, {lastname: { $regex: new RegExp(search), $options: "i" }}, {uid: { $regex: new RegExp(search), $options: "i" }}]});
+  const custids = [];
+	customers.forEach(function(doc, err) {
+	  custids.push(doc._id);
+	});
+  var agents = await Agent.find({ status : { $ne : 'Trash'}, $or: [{name: { $regex: new RegExp(search), $options: "i" }}, {uid: { $regex: new RegExp(search), $options: "i" }}]});
+  const agentids = [];
+	agents.forEach(function(doc, err) {
+	  agentids.push(doc._id);
+	});
+  var condition = { $or: [{ uid: { $regex: new RegExp(search), $options: "i" }}, { title: { $regex: new RegExp(search), $options: "i" }}, { phone: { $regex: new RegExp(search), $options: "i" }}, { status: { $regex: new RegExp(search), $options: "i" }}, { email: { $regex: new RegExp(search), $options: "i" }}, { agent: { $in: agentids }}, { customer: { $in: custids }}, { createdBy: { $in: adminids }},  { modifiedBy: { $in: adminids }}]};
   }
   else
   condition = {};
   condition.status = status ? status : { $ne : 'Trash'};
-  condition._id = { $ne : '61efce935f2e3c054819a02f'};
   if(tradie) condition.tradie={$in:tradie};
   const crby = {path: 'createdBy', select: {'firstname': 1, 'lastname': 1}};
   const mfby = {path: 'modifiedBy', select: {'firstname': 1, 'lastname': 1}}; 

@@ -11,6 +11,7 @@ const Invoice = db.invoices;
 const Enquiry = db.enquiry;
 const Customer = db.customer;
 const Agent = db.agent;
+const Tradie = db.tradie;
 const Imap = require('imap');
 var fs = require('fs');
 var {Base64Decode} = require('base64-stream');
@@ -124,21 +125,26 @@ exports.syncMails = async (req, res) => {
 							data.attachment = sessionstorage.getItem('attachments');
 							sessionstorage.clear('attachments')
 						}
+						var ex = await Table.findOne({uid: seqno, email: emailapis.email});
+						if(!ex)
 						await Table.create(data);
 						await Mail.findByIdAndUpdate(emailapis.id, {mail : parseInt(seqno)+1}, {useFindAndModify:false});  
 					});
 				});
 				msg.once('attributes', async function(attrs) {
-					/*var attachments = findAttachmentParts(attrs.struct);
-					sessionstorage.setItem('attachments', attachments);
-					for (const attachment of attachments) {
-					  var f = imap.fetch(attrs.uid , { //do not use imap.seq.fetch here
-						bodies: [attachment.partID],
-						struct: true 
-					  });
-					  //build function to process attachment message
-					  f.on('message', buildAttMessageFunction(attachment));
-					}*/
+					var ex = await Table.findOne({uid: seqno, email: emailapis.email});
+					if(!ex){
+						var attachments = findAttachmentParts(attrs.struct);
+						sessionstorage.setItem('attachments', attachments);
+						for (const attachment of attachments) {
+						  var f = imap.fetch(attrs.uid , { //do not use imap.seq.fetch here
+							bodies: [attachment.partID],
+							struct: true 
+						  });
+						  //build function to process attachment message
+						  f.on('message', buildAttMessageFunction(attachment));
+						}
+					}
 				});
 				msg.once('end', function() {
 					//console.log(prefix + 'Finished');
@@ -442,6 +448,7 @@ exports.findOne = async(req, res) => {
     Table.findById(id)	
 	  .populate('customer')
 	  .populate('agent')
+	  .populate('tradie')
 	  .populate('enquiry')
 	  .populate('quote')
 	  .populate('job')
@@ -474,24 +481,27 @@ exports.setRead = async(req, res) => {
 
 // Update all records from the database.
 exports.updateAll = async(req, res) => {
-  //var ms = await msg('adminusers');
-  const { ids, customer, agent, enquiry, quote, job, invoice } = req.query;
+  var ms = await msg('inbox');
+  const { ids, customer, agent, tradie, enquiry, quote, job, invoice } = req.query;
   var updates = {};
   if(customer) updates.customer = customer;
   if(agent) updates.agent = agent;
+  if(tradie) updates.tradie = tradie;
   if(enquiry) updates.enquiry = enquiry;
   if(quote) updates.quote = quote;
   if(job) updates.job = job;
   if(invoice) updates.invoice = invoice;
   await Table.updateMany(
    { _id: { $in: JSON.parse(ids) } }, 
-   [{ $unset: ["customer", "agent", "enquiry", "quote", "job", "invoice"]}]);
+   [{ $unset: ["customer", "agent", "tradie", "enquiry", "quote", "job", "invoice"]}]);
   await Table.updateMany(
    { _id: { $in: JSON.parse(ids) } },
    { $set: updates })
     .then((data) => {
-		//activity('Those mails has been updated successfully with job.', req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.updateAll);
-      res.status(200).send({ message: 'Those mails has been updated successfully with job.'});
+		if(JSON.parse(ids).length > 1)
+			res.status(200).send({ message: ms.messages[1].message});
+		else
+			res.status(200).send({ message: ms.messages[0].message});
     })
     .catch((err) => {
       res.status(500).send({ message: 'Maybe record was not found!'});
@@ -502,9 +512,10 @@ exports.updateAll = async(req, res) => {
 exports.list = async(req, res) => {
 	const customers = await Customer.find();
 	const agents = await Agent.find();
+	const tradies = await Tradie.find();
 	const enquiries = await Enquiry.find();
 	const quotes = await Quote.find();
 	const jobs = await Job.find();
 	const invoices = await Invoice.find();
-	res.status(200).send({ customers: customers, agents: agents, enquiries: enquiries, quotes: quotes, jobs: jobs, invoices: invoices });
+	res.status(200).send({ customers: customers, agents: agents, tradies: tradies, enquiries: enquiries, quotes: quotes, jobs: jobs, invoices: invoices });
 };

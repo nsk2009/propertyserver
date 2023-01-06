@@ -443,11 +443,7 @@ exports.findAllHistory = async (req, res) => {
 	//const job = await Job.find({tradie:id}).populate({ path: 'customer', select: ['firstname', 'lastname'] }).populate({ path: 'createdBy', select: ['firstname', 'lastname'] }).populate({ path: 'modifiedBy', select: ['firstname', 'lastname'] });
 	const jobs = await Job.find({tradie: id}); 
     const notes = await Note.find({ tradie: id}).sort({ _id: -1 }).populate('createdBy');
-	const info = [];
-	jobs.forEach(function(doc, err) {
-	  info.push(doc._id);
-	});
-	const mails = await Inbox.find({ job: { $in: info }}).sort({ _id: -1 }); 
+	const mails = await Inbox.find({ tradie: id}).sort({ _id: -1 }); 
 	const quotes = await Quote.find({tradie: id});
 	res.send({
 		tradie: tradie,

@@ -1,6 +1,8 @@
 const db = require("../models");
 const Table = db.invoices;
 const Admin = db.adminusers;
+const Customer = db.customer;
+const Agent = db.agent;
 const Setting = db.settings;
 const Inbox = db.inbox;
 const Note = db.notes;
@@ -66,13 +68,27 @@ exports.findAll = async(req, res) => {
   const { page, size, search, field, dir, status, show } = req.query;
   var sortObject = {};
   if(search){
-  var users = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }
-  }, {lastname: { $regex: new RegExp(search), $options: "i" }}]});
-	  const info1 = [];
-	  users.forEach(function (doc, err) {
-		info1.push(doc._id);
-	  });
-  var condition = { $or: [{ name: { $regex: new RegExp(search), $options: "i" }}, { abbreviation: { $regex: new RegExp(search), $options: "i" }}, { modifiedBy: { $in: info1 } }, { createdBy: { $in: info1 } } ]};
+  var admins = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }}, {lastname: { $regex: new RegExp(search), $options: "i" }}]});
+  const adminids = [];
+	admins.forEach(function(doc, err) {
+	  adminids.push(doc._id);
+	});
+  var customers = await Customer.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }}, {lastname: { $regex: new RegExp(search), $options: "i" }}, {uid: { $regex: new RegExp(search), $options: "i" }}]});
+  const custids = [];
+	customers.forEach(function(doc, err) {
+	  custids.push(doc._id);
+	});
+  var agents = await Agent.find({ status : { $ne : 'Trash'}, $or: [{name: { $regex: new RegExp(search), $options: "i" }}, {uid: { $regex: new RegExp(search), $options: "i" }}]});
+  const agentids = [];
+	agents.forEach(function(doc, err) {
+	  agentids.push(doc._id);
+	});
+  var jobs = await Job.find({ status : { $ne : 'Trash'}, $or: [{uid: { $regex: new RegExp(search), $options: "i" }}]});
+  const jobids = [];
+	jobs.forEach(function(doc, err) {
+	  jobids.push(doc._id);
+	});
+  var condition = { $or: [{ title: { $regex: new RegExp(search), $options: "i" }}, { uid: { $regex: new RegExp(search), $options: "i" }}, { job: { $in: jobids }}, { agent: { $in: agentids }}, { customer: { $in: custids }}, { modifiedBy: { $in: adminids } }, { createdBy: { $in: adminids } } ]};
   }
   else
   condition = {};

@@ -1,6 +1,8 @@
 const db = require("../models");
 const Table = db.quotes;
 const Admin = db.adminusers;
+const Customer = db.customer;
+const Agent = db.agent;
 const Setting = db.settings;
 const TradieTable = db.tradie;
 const enquiryTable = db.enquiry;
@@ -84,31 +86,46 @@ exports.findAll = async(req, res) => {
 	admins.push(e._id);
   });
   if(search){
-  var users = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }
-  }, {lastname: { $regex: new RegExp(search), $options: "i" }}]});
-	  const info1 = [];
-	  users.forEach(function (doc, err) {
-		info1.push(doc._id);
-	  });
-  if(tradie){
-  var condition = { $or: [{ uid: { $regex: new RegExp(search), $options: "i" }}, { abbreviation: { $regex: new RegExp(search), $options: "i" }}, { modifiedBy: { $in: info1 } }, { createdBy: { $in: info1 } }]};
-	   condition.tradie = tradie;
-  }
-  else
-  var condition = { $or: [{ uid: { $regex: new RegExp(search), $options: "i" }}, { abbreviation: { $regex: new RegExp(search), $options: "i" }}, { modifiedBy: { $in: info1 } }, { createdBy: { $in: info1 } },  { createdBy: { $in: admins } }, {status:{$ne:'Draft'}} ]};
+  var admins = await Admin.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }}, {lastname: { $regex: new RegExp(search), $options: "i" }}]});
+  const adminids = [];
+	admins.forEach(function(doc, err) {
+	  adminids.push(doc._id);
+	});
+  var customers = await Customer.find({ status : { $ne : 'Trash'}, $or: [{firstname: { $regex: new RegExp(search), $options: "i" }}, {lastname: { $regex: new RegExp(search), $options: "i" }}, {uid: { $regex: new RegExp(search), $options: "i" }}]});
+  const custids = [];
+	customers.forEach(function(doc, err) {
+	  custids.push(doc._id);
+	});
+  var agents = await Agent.find({ status : { $ne : 'Trash'}, $or: [{name: { $regex: new RegExp(search), $options: "i" }}, {uid: { $regex: new RegExp(search), $options: "i" }}]});
+  const agentids = [];
+	agents.forEach(function(doc, err) {
+	  agentids.push(doc._id);
+	});
+  var tradies = await TradieTable.find({ status : { $ne : 'Trash'}, $or: [{name: { $regex: new RegExp(search), $options: "i" }}, {uid: { $regex: new RegExp(search), $options: "i" }}]});
+  const tradieids = [];
+	tradies.forEach(function(doc, err) {
+	  tradieids.push(doc._id);
+	});
+  var enquiries = await enquiryTable.find({ status : { $ne : 'Trash'}, $or: [{uid: { $regex: new RegExp(search), $options: "i" }}]});
+  const enquiryids = [];
+	enquiries.forEach(function(doc, err) {
+	  enquiryids.push(doc._id);
+	});
+  var condition = { $or: [{ uid: { $regex: new RegExp(search), $options: "i" }}, { title: { $regex: new RegExp(search), $options: "i" }}, { enquiry: { $in: enquiryids }}, { tradie: { $in: tradieids }}, { agent: { $in: agentids }}, { customer: { $in: custids }}, { modifiedBy: { $in: adminids } }, { createdBy: { $in: adminids } } ]};
   }
   else{
-	if(tradie){
-	var condition = { };
-	   condition.tradie = tradie;
-	}
-	else
-    var condition = { $or: [ { createdBy: { $in: admins } }, {status:{$ne:'Draft'}} ]};
+	var condition = {};
+  }
+  //, {status:{$ne:'Draft'}}
+   if(tradie){ 
+	condition.tradie = tradie;
+	condition.status = { $ne : 'Draft'}
   }
   condition.status = status ? status : { $ne : 'Trash'};
 
   sortObject[field] = dir;
   const { limit, offset } = getPagination(page, size);
+  console.log(condition);
   Table.paginate(condition, { collation: { locale: "en" }, populate: ['createdBy', 'modifiedBy', 'customer', 'agent', 'tradie', 'enquiry'], offset, limit, sort: sortObject })
     .then((data) => {
       res.send({
@@ -215,6 +232,7 @@ exports.findOne = async(req, res) => {
     .populate('customer')
     .populate('agent')
     .populate('tenant')
+	.populate('enquiry')
     .then((data) => {
       if (!data)
       res.status(404).send({ message: "OK"});
