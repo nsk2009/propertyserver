@@ -297,7 +297,7 @@ exports.payment = async(req, res) => {
 	const xeroid = await xero.addPayment(req.body);
 	console.log(xeroid);
 	if(xeroid.message === 'success'){
-		req.body.xero = xeroid;
+		req.body.xero = xeroid.id;
 		var set = await Setting.findById(settings_id).then();
 		req.body.uid="PAY"+set.payment;			
 		Payment.create(req.body)
