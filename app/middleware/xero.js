@@ -166,7 +166,7 @@ const updateInvoice = async(data) => {
 		}; 
 		lineItems.push(lineItem)
     });
-
+	var status = data.status === 'Awaiting Payment' ? 'AUTHORISED' : 'DRAFT';
 	const invoice = { 
 	  type: 'ACCREC',
 	  contact: contact,
@@ -175,7 +175,7 @@ const updateInvoice = async(data) => {
 	  lineItems: lineItems,
 	  reference: data.title,
 	  lineAmountTypes: data.taxtype,
-	  status: data.status
+	  status: status
 	}; 
 
 	const invoices = {  
@@ -297,11 +297,12 @@ const addPayment = async(data) => {
 	  const response = await xero.accountingApi.createPayment(xeroTenantId, payment);
 	  console.log(response.body || response.response.statusCode)
 	  var res = JSON.parse(JSON.stringify(response.body));
-	  return res.payments[0].paymentID;
+	  return {message: 'success', id: res.payments[0].paymentID};
 	} catch (err) {
-	  const error = JSON.stringify(err.response.body, null, 2)
-	  console.log(`Status Code: ${err.response.statusCode} => ${error}`);
-	  return 'error';
+	  const error = JSON.parse(JSON.stringify(err.response.body, null, 2))
+	  //console.log(error.Elements[0].ValidationErrors[0].Message)
+	  //console.log(`Status Code: ${err.response.statusCode} => ${error}`);
+	  return {message: error.Elements[0].ValidationErrors[0].Message, id: ''};
 	}
 }
 
@@ -320,7 +321,7 @@ const removePayment = async(paymentID) => {
 	  var res = JSON.parse(JSON.stringify(response.body));
 	  return res.payments[0].paymentID;
 	} catch (err) {
-	  const error = JSON.stringify(err.response.body, null, 2)
+	  const error = JSON.parse(JSON.stringify(err.response.body, null, 2))
 	  //console.log(`Status Code: ${err.response.statusCode} => ${error}`);
 	  return 'error';
 	}

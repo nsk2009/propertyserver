@@ -159,7 +159,8 @@ exports.sendToCustomer = async(req, res) => {
 		res.status(404).send({ message: "OK"});
 		else {
 			//const text = await gethtml.quotehtml();
-			await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Awaiting Payment', sent: 1}, {useFindAndModify:false});			
+			var updata = await Table.findByIdAndUpdate(id, {message:req.body.message, status:'Awaiting Payment', sent: 1}, {useFindAndModify:false});	
+			const xeroid = await xero.updateInvoice(updata);		
 			var filename = `/invoices/${id}.pdf`;
 			await email('6396f126e4b241356ccb5cf5', 'admin', {'{subject}': req.body.subject, '{message}': req.body.message,'{email}': req.body.email, '{attachment}': req.body.attach ? filename : null}, '', req.body.message);
 			res.send({message:"Invoice has been sent to customer!"});
@@ -295,7 +296,7 @@ exports.payment = async(req, res) => {
 	req.body.invoiceID = invo.xero;
 	const xeroid = await xero.addPayment(req.body);
 	console.log(xeroid);
-	if(xeroid !== 'error'){
+	if(xeroid.message === 'success'){
 		req.body.xero = xeroid;
 		var set = await Setting.findById(settings_id).then();
 		req.body.uid="PAY"+set.payment;			
@@ -316,7 +317,7 @@ exports.payment = async(req, res) => {
 		});
 	}
 	else{
-		res.status(500).send({ message: ms.messages[3].message});
+		res.status(500).send({ message: xeroid.message});
 	}
 };
 
