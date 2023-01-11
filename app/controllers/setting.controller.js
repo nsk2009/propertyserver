@@ -8,6 +8,13 @@ const Tax = db.taxes;
 const Bank = db.banks; 
 const Paymentapi = db.accountingapis;
 const Transactions = db.transactions;
+const Invoice = db.invoices;
+const Job = db.jobs;
+const Enquiry = db.enquiry;
+const Quote = db.quotes;
+const Customer = db.customer;
+const Tradie = db.tradie;
+const Agent = db.agent;
 const activity = require("../middleware/activity");
 const xero = require("../middleware/xero");
 var fs = require('fs');
@@ -286,3 +293,48 @@ exports.findInvoice = async (req, res) => {
       res.status(400).send({ message: "Invalid Customer id" });
     })
 };
+
+exports.globalsearch = async (req, res) => {
+	const { search } = req.query;
+	let invoices = [];
+	let jobs = [];
+	let enquiries = [];
+	let quotes = [];
+	let customers = [];
+	let tradies = [];
+	let agents = [];
+
+	if (search) {
+
+		var inv_cond = { $or: [{ status: { $regex: new RegExp(search), $options: "i" } }, { title: { $regex: new RegExp(search), $options: "i" } }, { uid: { $regex: new RegExp(search), $options: "i" } }] };
+
+		var job_cond = { $or: [{ title: { $regex: new RegExp(search), $options: "i" } }, { uid: { $regex: new RegExp(search), $options: "i" } }, { status: { $regex: new RegExp(search), $options: "i" } }, { address: { $regex: new RegExp(search), $options: "i" } }, { description: { $regex: new RegExp(search), $options: "i" } }] };
+
+		var enq_cond = { $or: [{ phone: { $regex: new RegExp(search), $options: "i" } }, { email: { $regex: new RegExp(search), $options: "i" } }, { status: { $regex: new RegExp(search), $options: "i" } }, { address: { $regex: new RegExp(search), $options: "i" } }, { company: { $regex: new RegExp(search), $options: "i" } }, { title: { $regex: new RegExp(search), $options: "i" } }, { jobaddress: { $regex: new RegExp(search), $options: "i" } }, { description: { $regex: new RegExp(search), $options: "i" } }, { source: { $regex: new RegExp(search), $options: "i" } }, { uid: { $regex: new RegExp(search), $options: "i" } }]};
+
+		var qut_cond = { $or: [{ status: { $regex: new RegExp(search), $options: "i" } }, { tstatus: { $regex: new RegExp(search), $options: "i" } }, { name: { $regex: new RegExp(search), $options: "i" } }, { title: { $regex: new RegExp(search), $options: "i" } }, { description: { $regex: new RegExp(search), $options: "i" } }, { terms: { $regex: new RegExp(search), $options: "i" } }, { uid: { $regex: new RegExp(search), $options: "i" } }] };
+
+		var cust_cond = { $or: [{ firstname: { $regex: new RegExp(search), $options: "i" } }, { lastname: { $regex: new RegExp(search), $options: "i" } }, { phone: { $regex: new RegExp(search), $options: "i" } }, { status: { $regex: new RegExp(search), $options: "i" } }, { email: { $regex: new RegExp(search), $options: "i" } }, { uid: { $regex: new RegExp(search), $options: "i" } }, { address: { $regex: new RegExp(search), $options: "i" } }] };
+
+		var trd_cond = { $or: [{ name: { $regex: new RegExp(search), $options: "i" } }, { company: { $regex: new RegExp(search), $options: "i" } }, { phone: { $regex: new RegExp(search), $options: "i" } }, { status: { $regex: new RegExp(search), $options: "i" } }, { email: { $regex: new RegExp(search), $options: "i" } }, { uid: { $regex: new RegExp(search), $options: "i" } }, { accname: { $regex: new RegExp(search), $options: "i" } }, { accnum: { $regex: new RegExp(search), $options: "i" } }, { abn: { $regex: new RegExp(search), $options: "i" } }, { bsbcode: { $regex: new RegExp(search), $options: "i" } }, { billaddress: { $regex: new RegExp(search), $options: "i" } }] };
+
+		var agt_cond = { $or: [{ name: { $regex: new RegExp(search), $options: "i" } }, { company: { $regex: new RegExp(search), $options: "i" } }, { phone: { $regex: new RegExp(search), $options: "i" } }, { status: { $regex: new RegExp(search), $options: "i" } }, { email: { $regex: new RegExp(search), $options: "i" } }, { uid: { $regex: new RegExp(search), $options: "i" } }, { address: { $regex: new RegExp(search), $options: "i" } }, { description: { $regex: new RegExp(search), $options: "i" } }] };
+		
+		invoices = await Invoice.find(inv_cond).select({ title: 1, uid: 1, status: 1, duedate: 1, issuedate: 1, total:1 });
+    jobs = await Job.find(job_cond).select({ title: 1, uid: 1, status: 1, address: 1, startdate: 1, duedate: 1 });
+    enquiries = await Enquiry.find(enq_cond).select({ title: 1, uid: 1, phone: 1, email: 1, status: 1 });
+    quotes = await Quote.find(qut_cond).select({ title: 1, uid: 1, name: 1, tstatus: 1, status: 1, uid: 1, quote_date: 1 });
+    tradies = await Tradie.find(trd_cond).select({ name: 1, company: 1, phone: 1, status: 1, email: 1, uid: 1, accname: 1 });
+    customers = await Customer.find(cust_cond).select({ firstname: 1, lastname: 1, phone: 1, status: 1, email: 1, uid: 1, address: 1 });
+    agents = await Agent.find(agt_cond).select({ name: 1, company: 1, phone: 1, status: 1, email: 1, uid: 1, address: 1 });
+	}
+	res.send({
+		invoices: invoices,
+		jobs: jobs,
+		enquiries: enquiries,
+		quotes: quotes,
+		customers: customers,
+		tradies: tradies,
+		agents: agents
+	});
+}

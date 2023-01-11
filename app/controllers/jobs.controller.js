@@ -138,7 +138,7 @@ exports.autoload = async (req, res) => {
   const id = req.params.id;
   const notes = await Note.find({ job: id}).sort({ _id: -1 }).populate('createdBy');
   const mails = await Inbox.find({ job: id}).sort({ _id: -1 });
-  const invoice = await Invoice.findOne({ job: id}).populate('createdBy');
+  const invoice = await Invoice.find({ job: id}).populate('createdBy');
   const documents = await Document.find({ job: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');
   const details = await Table.findOne({ _id: id})
     .populate('createdBy')

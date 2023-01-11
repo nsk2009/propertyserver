@@ -7,6 +7,7 @@ const Setting = db.settings;
 const Inbox = db.inbox;
 const Note = db.notes;
 const Job = db.jobs;
+const Payment = db.payments;
 const Document = db.documents; 
 const msg = require("../middleware/message");
 const puppeteer = require("puppeteer");
@@ -39,7 +40,8 @@ exports.create = async(req, res) => {
 	const xeroid = await xero.createInvoice(req.body);
 	if(xeroid !== 'error'){
 		req.body.uid =  'INV' + Autoid;
-		req.body.xero = xeroid;  
+		req.body.xero = xeroid; 
+		req.body.due = req.body.total;
 		Table.create(req.body)
 		.then(async(data1) => {
 			if (!data1) {
@@ -225,6 +227,7 @@ exports.details = async(req, res) => {
   var ms = await msg('invoices');
   const notes = await Note.find({ invoice: id}).sort({ _id: -1 }).populate('createdBy');
   const mails = await Inbox.find({ invoice: id}).sort({ _id: -1 });
+  const payments = await Payment.find({ invoice: id, status: 'Active'}).sort({ _id: 1 });
   const documents = await Document.find({ invoice: id, status: 'Active'}).sort({ _id: -1 }).populate('createdBy');
   Table.findById(id)
     .populate('createdBy')
@@ -238,7 +241,7 @@ exports.details = async(req, res) => {
     .then((data) => {
       if (!data)
       res.status(404).send({ message: "OK"});
-      else res.send({ data: data, notes: notes, mails: mails, documents: documents});
+      else res.send({ data: data, notes: notes, mails: mails, documents: documents, payments: payments});
     })
     .catch((err) => {
       res.status(500).send({ message: "Invalid quote id"});
@@ -260,6 +263,7 @@ exports.update = async(req, res) => {
 	const id = req.params.id;
 	const xeroid = await xero.updateInvoice(req.body);
 	if(xeroid !== 'error'){
+		req.body.due = req.body.total;
 		Table.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
 		.then((data) => {
 			if (!data) {
@@ -274,6 +278,61 @@ exports.update = async(req, res) => {
 		.catch((err) => {
 			res.status(500).send({ message: ms.messages[3].message});
 		});
+	}
+	else{
+		res.status(500).send({ message: ms.messages[3].message});
+	}
+};
+
+// Payment a record by the id in the request
+exports.payment = async(req, res) => {
+	var ms = await msg('invoices');
+	if (!req.body)
+		return res.status(400).send({ message: ms.messages[3].message});
+	const id = req.params.id;
+	var invo = await Table.findById(id);
+	req.body.amount = parseFloat(req.body.amount);
+	req.body.invoiceID = invo.xero;
+	const xeroid = await xero.addPayment(req.body);
+	console.log(xeroid);
+	if(xeroid !== 'error'){
+		req.body.xero = xeroid;
+		var set = await Setting.findById(settings_id).then();
+		req.body.uid="PAY"+set.payment;			
+		Payment.create(req.body)
+		.then(async(data) => {
+			if (!data) {
+				res.status(404).send({ message: ms.messages[3].message});
+			}
+			else {				
+				await Table.findByIdAndUpdate(id, { paid: invo.paid + req.body.amount ,due: invo.due-req.body.amount }, { useFindAndModify: false })
+				await Setting.findByIdAndUpdate(settings_id, { payment: set.payment+1 }, { useFindAndModify: false });
+				activity(ms.messages[9].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+				res.send({ message: ms.messages[9].message });
+			}
+		})
+		.catch((err) => {
+			res.status(500).send({ message: ms.messages[3].message});
+		});
+	}
+	else{
+		res.status(500).send({ message: ms.messages[3].message});
+	}
+};
+
+// Payment a record by the id in the request
+exports.removepayment = async(req, res) => {
+	var ms = await msg('invoices');
+	const id = req.params.id;
+	const pay = req.params.pay;
+	var invo = await Table.findById(id);
+	var payment = await Payment.findById(pay);
+	const xeroid = await xero.removePayment(payment.xero);
+	if(xeroid !== 'error'){
+		await Table.findByIdAndUpdate(id, { paid: invo.paid - payment.amount ,due: invo.due+payment.amount }, { useFindAndModify: false });
+		await Payment.findByIdAndUpdate(pay, { status: 'Trash' }, { useFindAndModify: false });
+		activity(ms.messages[10].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);
+		res.send({ message: ms.messages[10].message });
 	}
 	else{
 		res.status(500).send({ message: ms.messages[3].message});

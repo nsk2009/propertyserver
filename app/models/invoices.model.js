@@ -28,17 +28,17 @@ module.exports = (mongoose, mongoosePaginate) => {
 		uid:String,
 		title:String,
 		contact: Array,
-		subtotal: String,
+		subtotal: Number,
 		grosstotal: String,
-		discamt: String,
-		taxamt: String,
-		total: String,
+		discamt: Number,
+		taxamt: Number,
+		total: Number,
 		discount: String, 
 		distype: String,
 		taxrate: String,
 		taxtype: String,
-		issuedate: String,
-		duedate: String,
+		issuedate: Date,
+		duedate: Date,
 		terms: String,
 		xero: String,
 		taxid:{
@@ -48,6 +48,10 @@ module.exports = (mongoose, mongoosePaginate) => {
 		sent: {
 			type: Number,
 			enum : [0, 1],
+			default: 0
+		}, 
+		due: {
+			type: Number,
 			default: 0
 		}, 
 		paid: {
@@ -65,7 +69,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 		}, 	
 		status: {
 			type: String,
-			enum : ['Draft','Awaiting Payment','Paid'],
+			enum : ['Draft','Awaiting Payment','Overdue','Completed'],
 			default: 'Draft'
 		}, 	
 		createdBy: {

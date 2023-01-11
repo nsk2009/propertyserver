@@ -26,6 +26,7 @@ db.banks = require("./banks.model.js")(mongoose, mongoosePaginate);
 db.documents = require("./documents.model.js")(mongoose, mongoosePaginate);
 db.quotes = require("./quotes.model.js")(mongoose, mongoosePaginate);
 db.invoices = require("./invoices.model.js")(mongoose, mongoosePaginate);
+db.payments = require("./payments.model.js")(mongoose, mongoosePaginate);
 db.jobs = require("./jobs.model.js")(mongoose, mongoosePaginate);
 db.tradie = require("./tradie.model.js")(mongoose, mongoosePaginate);
 db.accountingapis = require("./accountingapi.model.js")(mongoose, mongoosePaginate);

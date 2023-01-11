@@ -17,7 +17,7 @@ module.exports = (mongoose, mongoosePaginate) => {
       accname:String,
       accnum:String,
       bsbcode:String,
-      billaddress:String,	  
+      notes:String,	  
       gst: {
         type: String,
         enum: ['Yes', 'No'],

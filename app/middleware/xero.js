@@ -268,6 +268,63 @@ const getInvoice = async(invoiceID) => {
 	}
 }
 
+const addPayment = async(data) => {
+	const xero = await connect();
+    const tokenSet = await xero.getClientCredentialsToken();
+	await xero.updateTenants();
+	const xeroTenantId = xero.tenants[0].tenantId;
+	
+	const invoice = { 
+	  invoiceID: data.invoiceID
+	}; 
+
+	const account = { 
+	  accountID: data.bank
+	}; 
+
+	const payment = { 
+	  invoice: invoice,
+	  account: account,
+	  amount: data.amount,
+	  date: new Date(data.date)
+	}; 
+
+	const payments = {  
+	  payments: [payment]
+	}; 
+	
+	try {
+	  const response = await xero.accountingApi.createPayment(xeroTenantId, payment);
+	  //console.log(response.body || response.response.statusCode)
+	  var res = JSON.parse(JSON.stringify(response.body));
+	  return res.payments[0].paymentID;
+	} catch (err) {
+	  const error = JSON.stringify(err.response.body, null, 2)
+	  //console.log(`Status Code: ${err.response.statusCode} => ${error}`);
+	  return 'error';
+	}
+}
+
+const removePayment = async(paymentID) => {
+	const xero = await connect();
+    const tokenSet = await xero.getClientCredentialsToken();
+	await xero.updateTenants();
+	const xeroTenantId = xero.tenants[0].tenantId;
+
+	const paymentDelete = { 
+	  status: "DELETED"
+	}; 
+	try {
+	  const response = await xero.accountingApi.deletePayment(xeroTenantId, paymentID, paymentDelete);
+	  //console.log(response.body || response.response.statusCode)
+	  var res = JSON.parse(JSON.stringify(response.body));
+	  return res.payments[0].paymentID;
+	} catch (err) {
+	  const error = JSON.stringify(err.response.body, null, 2)
+	  //console.log(`Status Code: ${err.response.statusCode} => ${error}`);
+	  return 'error';
+	}
+}
 
 const options = {
     createContact,
@@ -278,6 +335,8 @@ const options = {
 	getAccounts,
 	getContact,
 	getInvoice,
+	addPayment,
+	removePayment
 };
 
 module.exports = options;

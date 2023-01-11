@@ -27,6 +27,7 @@ module.exports = (mongoose, mongoosePaginate) => {
       tradies: Number,
       invoice: Number,
       job: Number,
+      payment: Number,
       cmsLink:String,
       customerLink:String,
       templateLink:String,

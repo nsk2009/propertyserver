@@ -22,6 +22,12 @@ module.exports = app => {
   // Send a quote to the customer
   router.post("/sendcustomer/:id", [authJwt.verifyToken], control.sendToCustomer);
 
+  // Send a quote to the customer
+  router.post("/payment/:id", [authJwt.verifyToken], control.payment);
+
+  // remove payment
+  router.get("/removepayment/:id/:pay", [authJwt.verifyToken], control.removepayment);
+
   // Retrieve a record
   router.get("/details/:id", [authJwt.verifyToken], control.details);
 

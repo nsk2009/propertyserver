@@ -7,6 +7,8 @@ const { authJwt } = require("../middleware");
 
   // Xero updates 
   router.get("/xeroupdates", [authJwt.verifyToken], settings.xeroupdates);
+  // Global Search 
+  router.get("/globalsearch", [authJwt.verifyToken], settings.globalsearch);
 
   // Retrieve a single record with id
   router.get("/:id", [authJwt.verifyToken], settings.findOne);

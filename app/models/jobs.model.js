@@ -3,8 +3,8 @@ module.exports = (mongoose, mongoosePaginate) => {
     {
 		title: String,
 		address: String,
-		startdate: String,
-		duedate: String,
+		startdate: Date,
+		duedate: Date,
 		enquiry:  {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "enquiry"
@@ -38,11 +38,11 @@ module.exports = (mongoose, mongoosePaginate) => {
 		uid:String,
 		terms:String,
 		contact: Array,
-		subtotal: String,
+		subtotal: Number,
 		grosstotal: String,
 		discamt: String,
-		taxamt: String,
-		total: String,
+		taxamt: Number,
+		total: Number,
 		discount: String,
 		distype: String,
 		taxrate: String,
@@ -65,7 +65,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 		}, 
 		status: {
 			type: String,
-			enum : ['New','In Progress','To Invoice','Complete'],
+			enum : ['New','In Progress','To Invoice','Completed'],
 			default: 'New'
 		}, 	
 		createdBy: {
