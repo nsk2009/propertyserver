@@ -295,12 +295,12 @@ const addPayment = async(data) => {
 	
 	try {
 	  const response = await xero.accountingApi.createPayment(xeroTenantId, payment);
-	  //console.log(response.body || response.response.statusCode)
+	  console.log(response.body || response.response.statusCode)
 	  var res = JSON.parse(JSON.stringify(response.body));
 	  return res.payments[0].paymentID;
 	} catch (err) {
 	  const error = JSON.stringify(err.response.body, null, 2)
-	  //console.log(`Status Code: ${err.response.statusCode} => ${error}`);
+	  console.log(`Status Code: ${err.response.statusCode} => ${error}`);
 	  return 'error';
 	}
 }
