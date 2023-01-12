@@ -161,7 +161,7 @@ exports.webhooks = async (req, res) => {
 		}
 		else if(e.eventCategory==="INVOICE"){
 			var invoice = await xero.getInvoice(e.resourceId);
-			//console.log(invoice);
+			console.log(invoice);
 			var payload={};
 			var items=[];
 			invoice.lineItems.forEach((e, i)=>{
@@ -251,7 +251,7 @@ exports.webhooks = async (req, res) => {
 		res.statusCode = 401
 	}
 
-	//console.log("Response Code: "+res.statusCode)
+	console.log("Response Code: "+res.statusCode)
 
 	res.send()
 };
