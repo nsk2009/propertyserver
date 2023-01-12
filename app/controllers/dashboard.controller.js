@@ -136,7 +136,7 @@ exports.webhooks = async (req, res) => {
 			payload.lastname=contact.lastName;
 			payload.email=contact.emailAddress;
 			var phone= (contact.phones.filter(element => {
-			// 👇️ using AND (&&) operator
+			// 👇️  using AND (&&) operator
 				return element.phoneType === "MOBILE";
 			}));
 			payload.phone= phone[0].phoneNumber;
@@ -161,7 +161,7 @@ exports.webhooks = async (req, res) => {
 		}
 		else if(e.eventCategory==="INVOICE"){
 			var invoice = await xero.getInvoice(e.resourceId);
-			console.log(invoice);
+			//console.log(invoice);
 			var payload={};
 			var items=[];
 			invoice.lineItems.forEach((e, i)=>{
@@ -194,14 +194,14 @@ exports.webhooks = async (req, res) => {
 			else if(invoice.status === 'PAID')
 				payload.status = 'Completed'
 			var exist = await Customers.findOne({xero:invoice.contact.contactID}).then((res)=>{return res;}).catch((e)=>{console.log(e); return "error";});
-			if(exist){				
+			if(exist){
 				payload.customer = exist._id;
 				payload.usertype = 'customer';
 			}
 			else{
 				var existAgent = await Agents.findOne({xero:invoice.contact.contactID}).then((res)=>{return res;}).catch((e)=>{console.log(e); return "error";});
 				if(existAgent){
-					payload.customer = existAgent._id;
+					payload.agent = existAgent._id;
 					payload.usertype = 'agent';
 				}
 			}
@@ -216,24 +216,26 @@ exports.webhooks = async (req, res) => {
 				var update = await Invoice.create(payload).then((res)=>{return res;}).catch((e)=>{return e;});	
 				await Setting.findByIdAndUpdate(settings_id, { invoice: set.invoice + 1 }, { useFindAndModify: false });
 			}
-			await Payment.updateMany({ invoice: update._id }, { $set: { status : 'Trash' } });
-			var Autopayid = set.payment;			
-			for(const p of invoice.payments){
-				var pay = {};
-				pay.invoice = update._id;
-				pay.date = p.date;
-				pay.amount = p.amount;
-				pay.xero = p.paymentID;
-				pay.status = 'Active';
-				var payup = await Payment.findOneAndUpdate({xero: p.paymentID}, pay, { useFindAndModify: false });
-				if(!payup){
-					var Payid = sprintf('%01d', Autopayid);
-					pay.uid="PAY"+Payid;
-					await Payment.create(pay);
-					Autopayid++;
+			if(invoice.payments){
+				await Payment.updateMany({ invoice: update._id }, { $set: { status : 'Trash' } });
+				var Autopayid = set.payment;
+				for(const p of invoice.payments){
+					var pay = {};
+					pay.invoice = update._id;
+					pay.date = p.date;
+					pay.amount = p.amount;
+					pay.xero = p.paymentID;
+					pay.status = 'Active';
+					var payup = await Payment.findOneAndUpdate({xero: p.paymentID}, pay, { useFindAndModify: false });
+					if(!payup){
+						var Payid = sprintf('%01d', Autopayid);
+						pay.uid="PAY"+Payid;
+						await Payment.create(pay);
+						Autopayid++;
+					}
 				}
+				await Setting.findByIdAndUpdate(settings_id, { payment: Autopayid }, { useFindAndModify: false });
 			}
-			await Setting.findByIdAndUpdate(settings_id, { payment: Autopayid }, { useFindAndModify: false });
 		}
 	};
 	//console.log("Xero Signature: "+req.headers['x-xero-signature'])

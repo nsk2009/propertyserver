@@ -305,7 +305,10 @@ exports.payment = async(req, res) => {
 			if (!data) {
 				res.status(404).send({ message: ms.messages[3].message});
 			}
-			else {				
+			else {
+				var status = 'Awaiting Payment';
+				if(invo.due-req.body.amount === 0)
+				status = 'Completed';
 				await Table.findByIdAndUpdate(id, { paid: invo.paid + req.body.amount ,due: invo.due-req.body.amount }, { useFindAndModify: false })
 				await Setting.findByIdAndUpdate(settings_id, { payment: set.payment+1 }, { useFindAndModify: false });
 				activity(ms.messages[9].message, req.headers["user"], req.socket.remoteAddress.split(":").pop(), 'admin', req.session.useragent, req.session.useragent.create);

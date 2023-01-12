@@ -8,6 +8,7 @@ module.exports = (mongoose, mongoosePaginate) => {
 		uid: String,
 		xero: String,
 		date: Date,
+		bank: String,
 		amount: Number,
 		status: {
 			type: String,
