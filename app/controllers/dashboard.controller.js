@@ -122,7 +122,7 @@ exports.webhooks = async (req, res) => {
 	const xero_webhook_key = set.loan_type==="Live" ? set.live_xero_key : set.sand_xero_key;
 	//'7RNtBalk+ZQmdzZMblrFt/6y1cRBPfWcuEPg4s9U18AvyAOOqXsCi0VRSuIusbAITG0IIFWfgleKYC4LU7/x2A=='
 	//console.log("Body: "+req.body.toString())
-	var body = JSON.parse(req.body.toString()).events;
+	var body = [];//JSON.parse(req.body.toString()).events;
 	//console.log(body);	
 	for(const e of body){
 		//console.log(e);
